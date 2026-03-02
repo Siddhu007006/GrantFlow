@@ -37,10 +37,10 @@ Written in **PyTeal**, deployed on Algorand TestNet.
 
 | Property | Value |
 |---|---|
-| **App ID** | `756421648` |
+| **App ID** | `756423283` |
 | **Sponsor** | `HO5GLWLUO74NP3YNUKZVT7HDISGYZK23EIKXHVZSSYCNWCTKQRV7SHYBHE` |
 | **Receiver** | `OHQISH2P67CG7KVQA7T22ICMRN245VE4M4KGO7G43R4QBUATJN36NMFDRM` |
-| **Milestone Amount** | 1 ALGO |
+| **Milestone Amount** | 0.1 ALGO |
 
 ### Contract Operations
 
@@ -55,7 +55,7 @@ Written in **PyTeal**, deployed on Algorand TestNet.
 1. Sponsor deposits ALGO → Smart Contract Escrow
 2. Team works on milestone
 3. Sponsor clicks "Approve Milestone" → signs with wallet → approved = 1
-4. Sponsor clicks "Release Funds" → signs with wallet → 1 ALGO sent to team
+4. Sponsor clicks "Release Funds" → signs with wallet → 0.1 ALGO sent to team
 5. approved resets to 0, ready for next milestone
 ```
 

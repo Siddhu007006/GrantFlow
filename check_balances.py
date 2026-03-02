@@ -4,7 +4,7 @@ from algosdk.logic import get_application_address
 ALGOD_ADDRESS = "https://testnet-api.algonode.cloud"
 ALGOD_TOKEN = ""
 
-APP_ID = 756421648
+APP_ID = 756423283
 
 client = algod.AlgodClient(ALGOD_TOKEN, ALGOD_ADDRESS)
 
