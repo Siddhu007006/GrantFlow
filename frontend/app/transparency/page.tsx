@@ -51,10 +51,10 @@ interface MilestoneDisplay {
 }
 
 const milestones: MilestoneDisplay[] = [
-  { title: "Proposal Approval", amount: 0.40, status: "PAID" },
-  { title: "Development Phase", amount: 0.40, status: "PAID" },
-  { title: "Testing Phase", amount: 0.40, status: "APPROVED" },
-  { title: "Final Delivery", amount: 0.40, status: "PENDING" },
+  { title: "Proposal Approval", amount: 0.15, status: "PAID" },
+  { title: "Development Phase", amount: 0.35, status: "PAID" },
+  { title: "Testing Phase", amount: 0.25, status: "APPROVED" },
+  { title: "Final Delivery", amount: 0.45, status: "PENDING" },
 ];
 
 const statusConfig: Record<
@@ -263,18 +263,18 @@ export default function TransparencyPage() {
                   {/* Icon */}
                   <div
                     className={`flex items-center justify-center w-[24px] h-[24px] shrink-0 border ${isPaid
-                        ? "border-[#4ADE80] bg-[#0A2E1A]"
-                        : m.status === "APPROVED"
-                          ? "border-[#FFD600] bg-[#1A1500]"
-                          : "border-[#333333] bg-[#1A1A1A]"
+                      ? "border-[#4ADE80] bg-[#0A2E1A]"
+                      : m.status === "APPROVED"
+                        ? "border-[#FFD600] bg-[#1A1500]"
+                        : "border-[#333333] bg-[#1A1A1A]"
                       }`}
                   >
                     <span
                       className={`font-ibm-mono text-[11px] font-bold ${isPaid
-                          ? "text-[#4ADE80]"
-                          : m.status === "APPROVED"
-                            ? "text-[#FFD600]"
-                            : "text-[#555555]"
+                        ? "text-[#4ADE80]"
+                        : m.status === "APPROVED"
+                          ? "text-[#FFD600]"
+                          : "text-[#555555]"
                         }`}
                     >
                       {isPaid ? "✓" : m.status === "APPROVED" ? "•" : " "}
