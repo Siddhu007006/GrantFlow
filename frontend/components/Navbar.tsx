@@ -100,19 +100,6 @@ export default function Navbar() {
 
         {/* ── Desktop CTA ── */}
         <div className="hidden md:flex items-center gap-[14px]">
-          <Link
-            href="/dashboard"
-            className="font-ibm-mono text-[10px] text-[#555] tracking-[1.5px] hover:text-[#FFD600] transition-colors"
-          >
-            DASHBOARD
-          </Link>
-          <Link
-            href="/transparency"
-            className="font-ibm-mono text-[10px] text-[#555] tracking-[1.5px] hover:text-[#4ADE80] transition-colors"
-          >
-            TRANSPARENCY
-          </Link>
-          <span className="w-[1px] h-[14px] bg-[#2D2D2D]" />
           {walletAddress ? (
             <button
               onClick={disconnectWallet}
@@ -184,21 +171,6 @@ export default function Navbar() {
             );
           })}
           <div className="flex flex-col gap-[10px] pt-5">
-            <Link
-              href="/dashboard"
-              className="font-ibm-mono text-[12px] text-[#555] tracking-[1.5px] hover:text-[#FFD600] transition-colors"
-              onClick={() => setMenuOpen(false)}
-            >
-              DASHBOARD
-            </Link>
-            <Link
-              href="/transparency"
-              className="font-ibm-mono text-[12px] text-[#555] tracking-[1.5px] hover:text-[#4ADE80] transition-colors"
-              onClick={() => setMenuOpen(false)}
-            >
-              TRANSPARENCY
-            </Link>
-            <span className="w-full h-[1px] bg-[#1D1D1D]" />
             {walletAddress ? (
               <button
                 onClick={() => { disconnectWallet(); setMenuOpen(false); }}
