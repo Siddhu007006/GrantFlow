@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useWallet } from "@/components/WalletProvider";
 
 const links = [
   { label: "HOME", section: "hero", href: "/" },
@@ -19,11 +18,7 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [active, setActive] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
-  const { walletAddress, isConnecting, connectWallet, disconnectWallet } = useWallet();
 
-  function shortenAddr(addr: string) {
-    return addr.slice(0, 6) + "..." + addr.slice(-4);
-  }
 
   /* ── scroll detection ── */
   useEffect(() => {
@@ -98,28 +93,6 @@ export default function Navbar() {
           })}
         </nav>
 
-        {/* ── Desktop CTA ── */}
-        <div className="hidden md:flex items-center gap-[14px]">
-          {walletAddress ? (
-            <button
-              onClick={disconnectWallet}
-              className="flex items-center gap-2 h-[36px] px-4 bg-[#111111] border border-[#FFD600] hover:border-[#F5F5F0] transition-colors cursor-pointer"
-            >
-              <span className="w-[6px] h-[6px] bg-[#4ADE80] rounded-full" />
-              <span className="font-ibm-mono text-[10px] text-[#FFD600] tracking-[1px]">
-                {shortenAddr(walletAddress)}
-              </span>
-            </button>
-          ) : (
-            <button
-              onClick={connectWallet}
-              disabled={isConnecting}
-              className="font-grotesk text-[11px] font-bold text-[#0A0A0A] bg-[#FFD600] tracking-[1.5px] px-[18px] py-[9px] hover:bg-[#F5F5F0] transition-colors cursor-pointer disabled:opacity-50"
-            >
-              {isConnecting ? "CONNECTING..." : "CONNECT WALLET"}
-            </button>
-          )}
-        </div>
 
         {/* ── Mobile burger ── */}
         <button
@@ -170,25 +143,6 @@ export default function Navbar() {
               </button>
             );
           })}
-          <div className="flex flex-col gap-[10px] pt-5">
-            {walletAddress ? (
-              <button
-                onClick={() => { disconnectWallet(); setMenuOpen(false); }}
-                className="flex items-center justify-center gap-2 font-ibm-mono text-[11px] text-[#FFD600] bg-[#111111] border border-[#FFD600] tracking-[1.5px] px-[18px] py-[11px] text-center cursor-pointer"
-              >
-                <span className="w-[6px] h-[6px] bg-[#4ADE80] rounded-full" />
-                {shortenAddr(walletAddress)}
-              </button>
-            ) : (
-              <button
-                onClick={() => { connectWallet(); setMenuOpen(false); }}
-                disabled={isConnecting}
-                className="font-grotesk text-[11px] font-bold text-[#0A0A0A] bg-[#FFD600] tracking-[1.5px] px-[18px] py-[11px] text-center hover:bg-[#F5F5F0] transition-colors cursor-pointer disabled:opacity-50"
-              >
-                {isConnecting ? "CONNECTING..." : "CONNECT WALLET"}
-              </button>
-            )}
-          </div>
         </nav>
       </div>
     </header>
