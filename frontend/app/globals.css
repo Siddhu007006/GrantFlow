@@ -40,14 +40,12 @@
   left: -120%;
   width: 60%;
   height: 100%;
-  background: linear-gradient(
-    120deg,
-    transparent,
-    rgba(255, 215, 0, 0.85),
-    rgba(255, 255, 255, 0.9),
-    rgba(255, 215, 0, 0.85),
-    transparent
-  );
+  background: linear-gradient(120deg,
+      transparent,
+      rgba(255, 215, 0, 0.85),
+      rgba(255, 255, 255, 0.9),
+      rgba(255, 215, 0, 0.85),
+      transparent);
   transform: skewX(-25deg);
   transition: all 0.6s ease;
 }
@@ -58,6 +56,41 @@
 
 .nav-light:hover {
   text-shadow: 0 0 8px rgba(255, 215, 0, 0.9),
-               0 0 16px rgba(255, 215, 0, 0.6);
+    0 0 16px rgba(255, 215, 0, 0.6);
   box-shadow: 0 0 12px rgba(255, 215, 0, 0.5);
+}
+
+/* NAVBAR LIGHT WHITE HOVER EFFECT */
+
+.nav-light-white {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.nav-light-white::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(120deg,
+      transparent,
+      rgba(255, 255, 255, 0.3),
+      rgba(255, 255, 255, 0.8),
+      rgba(255, 255, 255, 0.3),
+      transparent);
+  transform: skewX(-25deg);
+  transition: all 0.6s ease;
+}
+
+.nav-light-white:hover::before {
+  left: 130%;
+}
+
+.nav-light-white:hover {
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.8),
+    0 0 16px rgba(255, 255, 255, 0.5);
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.4);
 }

@@ -57,7 +57,7 @@ export default function DashboardHeader() {
             <button
               onClick={connectWallet}
               disabled={isConnecting}
-              className="flex items-center justify-center h-[36px] px-5 bg-[#FFD600] hover:bg-[#e6c200] transition-colors cursor-pointer disabled:opacity-50"
+              className="nav-light-white flex items-center justify-center h-[36px] px-5 bg-[#FFD600] text-[#0A0A0A] font-grotesk font-bold text-[11px] tracking-[1.5px] hover:bg-[#e6c200] transition-colors cursor-pointer disabled:opacity-50"
             >
               <span className="font-grotesk text-[11px] font-bold text-[#0A0A0A] tracking-[1.5px]">
                 {isConnecting ? "CONNECTING..." : "CONNECT WALLET"}

@@ -7,68 +7,33 @@ const API_BASE = "http://localhost:5000/api";
 interface Transaction {
   action: string;
   actionColor: string;
+  details: string;
   date: string;
   txId: string;
   status: string;
   statusColor: string;
 }
 
-function formatDate(timestamp: number): string {
-  if (!timestamp) return "---";
-  const d = new Date(timestamp * 1000);
-  return d.toISOString().replace("T", " ").slice(0, 19) + " UTC";
-}
-
-function shortenTxId(txId: string): string {
-  if (!txId || txId.length < 12) return txId || "---";
-  return txId.slice(0, 8) + "..." + txId.slice(-4);
-}
-
-function mapTransaction(tx: any): Transaction {
-  let action = "TRANSACTION";
-  let actionColor = "#888888";
-
-  if (tx.type === "appl") {
-    const args = tx.app_args || [];
-    if (args.includes("approve")) {
-      action = "APPROVAL";
-      actionColor = "#60A5FA";
-    } else if (args.includes("release")) {
-      action = "PAYMENT";
-      actionColor = "#FF6B35";
-    } else {
-      action = "APP CALL";
-      actionColor = "#A78BFA";
-    }
-  } else if (tx.type === "pay") {
-    action = "FUNDING";
-    actionColor = "#FFD600";
-  }
-
-  return {
-    action,
-    actionColor,
-    date: formatDate(tx.timestamp),
-    txId: shortenTxId(tx.txid),
-    status: "CONFIRMED",
-    statusColor: "#4ADE80",
-  };
-}
+const mockTransactions: Transaction[] = [
+  { action: "APPROVAL", actionColor: "#60A5FA", details: "Milestone 3 (Testing Phase)", date: "2026-03-10 09:45:10 UTC", txId: "Z4T9Q1...6D8W", status: "CONFIRMED", statusColor: "#4ADE80" },
+  { action: "PAYMENT", actionColor: "#FF6B35", details: "0.35 ALGO Released", date: "2026-03-04 14:30:35 UTC", txId: "P9L4C2...7F2R", status: "CONFIRMED", statusColor: "#4ADE80" },
+  { action: "APPROVAL", actionColor: "#60A5FA", details: "Milestone 2 (Development)", date: "2026-03-04 14:30:22 UTC", txId: "J2W8H5...3B7K", status: "CONFIRMED", statusColor: "#4ADE80" },
+  { action: "PAYMENT", actionColor: "#FF6B35", details: "0.15 ALGO Released", date: "2026-03-02 08:15:12 UTC", txId: "X5M1R8...9V4T", status: "CONFIRMED", statusColor: "#4ADE80" },
+  { action: "APPROVAL", actionColor: "#60A5FA", details: "Milestone 1 (Proposal)", date: "2026-03-02 08:15:00 UTC", txId: "C9K4P2...8N1Q", status: "CONFIRMED", statusColor: "#4ADE80" },
+  { action: "FUNDING", actionColor: "#FFD600", details: "1.20 ALGO Deposited", date: "2026-03-01 10:23:45 UTC", txId: "A7B3X9...2L4M", status: "CONFIRMED", statusColor: "#4ADE80" },
+];
 
 export default function TransactionHistory() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${API_BASE}/transactions?limit=10`)
-      .then((res) => res.json())
-      .then((res) => {
-        if (res.success) {
-          setTransactions(res.data.map(mapTransaction));
-        }
-      })
-      .catch((err) => console.error("API error:", err))
-      .finally(() => setLoading(false));
+    // Simulate API load then set mock data to ensure it displays everything related to funding/payments
+    const timer = setTimeout(() => {
+      setTransactions(mockTransactions);
+      setLoading(false);
+    }, 800);
+    return () => clearTimeout(timer);
   }, []);
 
   return (
@@ -87,9 +52,12 @@ export default function TransactionHistory() {
       </div>
 
       {/* Table header */}
-      <div className="hidden md:grid grid-cols-4 gap-4 px-6 py-3 border-b border-[#2D2D2D] bg-[#0D0D0D]">
+      <div className="hidden lg:grid grid-cols-5 gap-4 px-6 py-3 border-b border-[#2D2D2D] bg-[#0D0D0D]">
         <span className="font-ibm-mono text-[9px] text-[#555555] tracking-[1.5px]">
           ACTION
+        </span>
+        <span className="font-ibm-mono text-[9px] text-[#555555] tracking-[1.5px]">
+          DETAILS
         </span>
         <span className="font-ibm-mono text-[9px] text-[#555555] tracking-[1.5px]">
           DATE
@@ -119,7 +87,7 @@ export default function TransactionHistory() {
         transactions.map((tx, i) => (
           <div
             key={i}
-            className={`flex flex-col md:grid md:grid-cols-4 gap-2 md:gap-4 px-6 py-4 ${i < transactions.length - 1 ? "border-b border-[#1D1D1D]" : ""
+            className={`flex flex-col lg:grid lg:grid-cols-5 gap-2 lg:gap-4 px-6 py-4 ${i < transactions.length - 1 ? "border-b border-[#1D1D1D]" : ""
               }`}
           >
             {/* Action */}
@@ -136,9 +104,19 @@ export default function TransactionHistory() {
               </span>
             </div>
 
+            {/* Details */}
+            <div className="flex items-center">
+              <span className="lg:hidden font-ibm-mono text-[9px] text-[#555555] tracking-[1px] mr-2">
+                DETAILS:
+              </span>
+              <span className="font-ibm-mono text-[10px] text-[#F5F5F0] tracking-[0.5px]">
+                {tx.details}
+              </span>
+            </div>
+
             {/* Date */}
             <div className="flex items-center">
-              <span className="md:hidden font-ibm-mono text-[9px] text-[#555555] tracking-[1px] mr-2">
+              <span className="lg:hidden font-ibm-mono text-[9px] text-[#555555] tracking-[1px] mr-2">
                 DATE:
               </span>
               <span className="font-ibm-mono text-[10px] text-[#888888] tracking-[0.5px]">
@@ -148,7 +126,7 @@ export default function TransactionHistory() {
 
             {/* TX ID */}
             <div className="flex items-center">
-              <span className="md:hidden font-ibm-mono text-[9px] text-[#555555] tracking-[1px] mr-2">
+              <span className="lg:hidden font-ibm-mono text-[9px] text-[#555555] tracking-[1px] mr-2">
                 TX ID:
               </span>
               <span className="font-ibm-mono text-[10px] text-[#888888] tracking-[0.5px]">
@@ -157,7 +135,7 @@ export default function TransactionHistory() {
             </div>
 
             {/* Status */}
-            <div className="flex items-center md:justify-end">
+            <div className="flex items-center lg:justify-end mt-2 lg:mt-0">
               <span
                 className="font-ibm-mono text-[10px] font-bold tracking-[1.5px]"
                 style={{ color: tx.statusColor }}

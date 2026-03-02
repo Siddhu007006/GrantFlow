@@ -24,12 +24,12 @@ export default function FinalCTA() {
 
       {/* CTAs */}
       <div className="flex flex-col sm:flex-row items-center gap-4 md:gap-[16px] w-full sm:w-auto">
-        <a href="/dashboard" className="flex items-center justify-center w-full sm:w-[260px] h-[64px] bg-[#FFD600] hover:bg-[#e6c200] transition-colors">
+        <a href="/dashboard" className="nav-light flex items-center justify-center w-full sm:w-[260px] h-[64px] bg-[#FFD600] hover:bg-[#e6c200] transition-colors">
           <span className="font-grotesk text-[13px] font-bold text-[#0A0A0A] tracking-[2px]">
             SPONSOR
           </span>
         </a>
-        <a href="/student" className="flex items-center justify-center w-full sm:w-[220px] h-[64px] bg-[#0A0A0A] border-2 border-[#4ADE80] hover:border-[#6EE7A0] transition-colors">
+        <a href="/student" className="nav-light-white flex items-center justify-center w-full sm:w-[220px] h-[64px] bg-[#0A0A0A] border-2 border-[#4ADE80] hover:border-[#6EE7A0] transition-colors">
           <span className="font-ibm-mono text-[12px] text-[#4ADE80] tracking-[2px]">
             STUDENT
           </span>

@@ -132,7 +132,7 @@ export default function StudentPage() {
                             <button
                                 onClick={connectWallet}
                                 disabled={isConnecting}
-                                className="font-grotesk text-[11px] font-bold text-[#0A0A0A] bg-[#4ADE80] tracking-[1.5px] px-[18px] py-[9px] hover:bg-[#F5F5F0] transition-colors cursor-pointer disabled:opacity-50"
+                                className="nav-light-white font-grotesk text-[11px] font-bold text-[#0A0A0A] bg-[#4ADE80] tracking-[1.5px] px-[18px] py-[9px] hover:bg-[#F5F5F0] transition-colors cursor-pointer disabled:opacity-50"
                             >
                                 {isConnecting ? "CONNECTING..." : "CONNECT WALLET"}
                             </button>
@@ -187,9 +187,9 @@ export default function StudentPage() {
                                         <div className="flex items-center gap-6">
                                             <span className="font-ibm-mono text-[13px] text-[#888888]">{m.amount.toFixed(2)} ALGO</span>
                                             <div className={`flex items-center justify-center px-3 py-1 border ${m.status === "PAID" ? "bg-[#112211] border-[#4ADE80] text-[#4ADE80]" :
-                                                    m.status === "APPROVED" ? "bg-[#112211] border-[#4ADE80] text-[#4ADE80]" :
-                                                        m.status === "SUBMITTED" ? "bg-[#222211] border-[#FFD600] text-[#FFD600]" :
-                                                            "bg-[#1A1A1A] border-[#333333] text-[#888888]"
+                                                m.status === "APPROVED" ? "bg-[#112211] border-[#4ADE80] text-[#4ADE80]" :
+                                                    m.status === "SUBMITTED" ? "bg-[#222211] border-[#FFD600] text-[#FFD600]" :
+                                                        "bg-[#1A1A1A] border-[#333333] text-[#888888]"
                                                 }`}>
                                                 <span className="font-ibm-mono text-[10px] tracking-[1px]">{m.status}</span>
                                             </div>
@@ -298,7 +298,7 @@ export default function StudentPage() {
                                 <button
                                     type="submit"
                                     disabled={milestones.filter(m => m.status === "PENDING").length === 0}
-                                    className="w-full mt-2 bg-[#4ADE80] hover:bg-[#3BC970] text-[#0A0A0A] font-grotesk font-bold text-[13px] tracking-[2px] h-[48px] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="nav-light-white w-full mt-2 bg-[#4ADE80] hover:bg-[#3BC970] text-[#0A0A0A] font-grotesk font-bold text-[13px] tracking-[2px] h-[48px] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     SUBMIT MILESTONE
                                 </button>
