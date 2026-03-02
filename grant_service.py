@@ -14,7 +14,7 @@ from algosdk.logic import get_application_address
 ALGOD_ADDRESS = "https://testnet-api.algonode.cloud"
 ALGOD_TOKEN = ""
 
-APP_ID = 756423283
+APP_ID = 756430745
 SPONSOR_MNEMONIC = "ride youth ghost nice common little cushion nurse veteran cube jazz purity account cry excuse uphold stick like mind crazy judge corn banner above shock"
 
 # Derive sponsor credentials

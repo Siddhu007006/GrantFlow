@@ -12,7 +12,7 @@ export default function TransparencyHeader() {
   const { walletAddress, isConnecting, connectWallet, disconnectWallet } = useWallet();
 
   return (
-    <header className="flex flex-col w-full bg-[#0F0F0F] border-b border-[#2D2D2D]">
+    <header className="sticky top-0 z-50 flex flex-col w-full bg-[#0F0F0F] border-b border-[#2D2D2D]">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 px-6 md:px-[48px] py-5 max-w-[1400px] mx-auto w-full">
         {/* Left: Logo + Title */}
         <div className="flex flex-col gap-3">

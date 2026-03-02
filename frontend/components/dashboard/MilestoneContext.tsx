@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
+import { useSharedState } from "@/lib/useSharedState";
 
 export type MilestoneStatusType = "PENDING" | "SUBMITTED" | "APPROVED" | "PAID";
 
@@ -24,10 +25,10 @@ interface MilestoneContextType {
 }
 
 const defaultMilestones: Milestone[] = [
-    { id: 1, title: "Proposal Approval", amount: 0.15, status: "PAID" },
-    { id: 2, title: "Development Phase", amount: 0.35, status: "PAID" },
-    { id: 3, title: "Testing Phase", amount: 0.40, status: "APPROVED" },
-    { id: 4, title: "Final Delivery", amount: 1.10, status: "PENDING" },
+    { id: 1, title: "Proposal Approval", amount: 0.50, status: "PENDING" },
+    { id: 2, title: "Development Phase", amount: 0.50, status: "PENDING" },
+    { id: 3, title: "Testing Phase", amount: 0.50, status: "PENDING" },
+    { id: 4, title: "Final Delivery", amount: 0.50, status: "PENDING" },
 ];
 
 const MilestoneContext = createContext<MilestoneContextType>({
@@ -47,7 +48,7 @@ export function useMilestones() {
 }
 
 export function MilestoneProvider({ children }: { children: ReactNode }) {
-    const [milestones, setMilestones] = useState<Milestone[]>(defaultMilestones);
+    const [milestones, setMilestones] = useSharedState<Milestone[]>("grantflow_milestones", defaultMilestones);
     const [selectedId, setSelectedId] = useState(3); // Default to Testing Phase
 
     const selectedMilestone = milestones.find((m) => m.id === selectedId);

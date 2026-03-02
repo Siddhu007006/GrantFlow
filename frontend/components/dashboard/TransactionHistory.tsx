@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useSharedState } from "@/lib/useSharedState";
 
 const API_BASE = "http://localhost:5000/api";
 
-interface Transaction {
+export interface Transaction {
   action: string;
   actionColor: string;
   details: string;
@@ -15,26 +16,12 @@ interface Transaction {
 }
 
 const mockTransactions: Transaction[] = [
-  { action: "APPROVAL", actionColor: "#60A5FA", details: "Milestone 3 (Testing Phase)", date: "2026-03-10 09:45:10 UTC", txId: "Z4T9Q1...6D8W", status: "CONFIRMED", statusColor: "#4ADE80" },
-  { action: "PAYMENT", actionColor: "#FF6B35", details: "0.35 ALGO Released", date: "2026-03-04 14:30:35 UTC", txId: "P9L4C2...7F2R", status: "CONFIRMED", statusColor: "#4ADE80" },
-  { action: "APPROVAL", actionColor: "#60A5FA", details: "Milestone 2 (Development)", date: "2026-03-04 14:30:22 UTC", txId: "J2W8H5...3B7K", status: "CONFIRMED", statusColor: "#4ADE80" },
-  { action: "PAYMENT", actionColor: "#FF6B35", details: "0.15 ALGO Released", date: "2026-03-02 08:15:12 UTC", txId: "X5M1R8...9V4T", status: "CONFIRMED", statusColor: "#4ADE80" },
-  { action: "APPROVAL", actionColor: "#60A5FA", details: "Milestone 1 (Proposal)", date: "2026-03-02 08:15:00 UTC", txId: "C9K4P2...8N1Q", status: "CONFIRMED", statusColor: "#4ADE80" },
-  { action: "FUNDING", actionColor: "#FFD600", details: "2.00 ALGO Deposited", date: "2026-03-01 10:23:45 UTC", txId: "A7B3X9...2L4M", status: "CONFIRMED", statusColor: "#4ADE80" },
+  { action: "FUNDING", actionColor: "#FFD600", details: "2.00 ALGO Deposited", date: "2026-03-02 17:45:00 UTC", txId: "V0BAX3...JKXIQ", status: "CONFIRMED", statusColor: "#4ADE80" },
 ];
 
 export default function TransactionHistory() {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // Simulate API load then set mock data to ensure it displays everything related to funding/payments
-    const timer = setTimeout(() => {
-      setTransactions(mockTransactions);
-      setLoading(false);
-    }, 800);
-    return () => clearTimeout(timer);
-  }, []);
+  const [transactions, setTransactions] = useSharedState<Transaction[]>("grantflow_transactions", mockTransactions);
+  const loading = false;
 
   return (
     <div className="flex flex-col bg-[#0F0F0F] border border-[#2D2D2D]">

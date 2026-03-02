@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useWallet } from "@/components/WalletProvider";
+import { useSharedState } from "@/lib/useSharedState";
 
 const CONTRACT_ADDRESS = "TBD7...4H9Z";
 const TOTAL_GRANT = 1.20;
@@ -28,10 +29,10 @@ interface Submission {
 }
 
 const initialMilestones: Milestone[] = [
-    { id: 1, title: "Proposal Approval", amount: 0.15, status: "PAID" },
-    { id: 2, title: "Development Phase", amount: 0.35, status: "PAID" },
-    { id: 3, title: "Testing Phase", amount: 0.40, status: "APPROVED" },
-    { id: 4, title: "Final Delivery", amount: 1.10, status: "PENDING" },
+    { id: 1, title: "Proposal Approval", amount: 0.50, status: "PENDING" },
+    { id: 2, title: "Development Phase", amount: 0.50, status: "PENDING" },
+    { id: 3, title: "Testing Phase", amount: 0.50, status: "PENDING" },
+    { id: 4, title: "Final Delivery", amount: 0.50, status: "PENDING" },
 ];
 
 function shortenAddr(addr: string) {
@@ -47,8 +48,10 @@ const statusBadge: Record<string, { bg: string; border: string; text: string; do
 
 export default function StudentPage() {
     const { walletAddress, isConnecting, connectWallet, disconnectWallet } = useWallet();
-    const [milestones, setMilestones] = useState<Milestone[]>(initialMilestones);
-    const [submissions, setSubmissions] = useState<Submission[]>([]);
+    const [milestones, setMilestones] = useSharedState<Milestone[]>("grantflow_milestones", initialMilestones);
+    const [submissions, setSubmissions] = useSharedState<Submission[]>("grantflow_submissions", []);
+    // Ensure we can write to the transaction log too
+    const [transactions, setTransactions] = useSharedState<any[]>("grantflow_transactions", []);
 
     // Form state
     const [selectedMilestone, setSelectedMilestone] = useState<number>(4);
@@ -80,6 +83,18 @@ export default function StudentPage() {
         };
 
         setSubmissions([newSubmission, ...submissions]);
+
+        // Push a generic submission event to the transaction history log
+        const newTx = {
+            action: "SUBMISSION",
+            actionColor: "#60A5FA",
+            details: `Proof Submitted for Milestone ${milestone.id}`,
+            date: new Date().toISOString().replace("T", " ").substring(0, 19) + " UTC",
+            txId: "---",
+            status: "PENDING REVIEW",
+            statusColor: "#FFD600"
+        };
+        setTransactions((prev) => [newTx, ...prev]);
 
         // Update milestone status
         setMilestones(prev => prev.map(m =>
@@ -247,7 +262,7 @@ export default function StudentPage() {
                     <div className="flex flex-col gap-8">
 
                         {/* [03] SUBMISSION PANEL */}
-                        <section className="bg-[#111111] border border-[#4ADE80] p-6 sticky top-24">
+                        <section className="bg-[#111111] border border-[#4ADE80] p-6">
                             <h2 className="font-ibm-mono text-[12px] text-[#4ADE80] tracking-[2px] mb-6 flex items-center gap-2">
                                 <span className="w-2 h-2 bg-[#4ADE80] rounded-full animate-pulse" />
                                 SUBMIT PROOF
@@ -314,27 +329,7 @@ export default function StudentPage() {
                             </form>
                         </section>
 
-                        {/* [05] PAYMENT SUMMARY */}
-                        <section className="bg-[#111111] border border-[#2D2D2D] p-6">
-                            <h2 className="font-ibm-mono text-[12px] text-[#888888] tracking-[2px] mb-6">
-                                PAYMENT SUMMARY
-                            </h2>
-                            <div className="flex flex-col gap-3">
-                                {milestones.map(m => (
-                                    <div key={m.id} className="flex items-center justify-between pb-3 border-b border-[#1D1D1D] last:border-0 last:pb-0">
-                                        <div className="flex flex-col gap-1">
-                                            <span className="font-ibm-mono text-[12px] text-[#F5F5F0]">{m.title}</span>
-                                            <span className="font-ibm-mono text-[10px] text-[#555555]">
-                                                {m.status === "PAID" ? "FUNDS RECEIVED" : m.status === "APPROVED" ? "LOCKED IN ESCROW" : "PENDING"}
-                                            </span>
-                                        </div>
-                                        <span className={`font-ibm-mono text-[13px] ${m.status === "PAID" ? "text-[#4ADE80]" : "text-[#888888]"}`}>
-                                            {m.amount.toFixed(2)} ALGO
-                                        </span>
-                                    </div>
-                                ))}
-                            </div>
-                        </section>
+
 
                     </div>
                 </div>

@@ -5,6 +5,8 @@ import algosdk from "algosdk";
 import { useWallet } from "@/components/WalletProvider";
 import { SPONSOR_ADDRESS, RECEIVER_ADDRESS, APP_ID, ALGOD_URL } from "@/lib/constants";
 import { useMilestones, type MilestoneStatusType } from "./MilestoneContext";
+import { useSharedState } from "@/lib/useSharedState";
+import { type Transaction } from "./TransactionHistory";
 
 const algodClient = new algosdk.Algodv2("", ALGOD_URL, "");
 
@@ -44,6 +46,7 @@ export default function SponsorActions() {
   const [error, setError] = useState<string | null>(null);
   const { walletAddress, isSponsor, connectWallet, resetConnection, peraWallet } = useWallet();
   const { milestones, selectedId, selectedMilestone, selectMilestone, approveMilestone, releaseMilestone } = useMilestones();
+  const [transactions, setTransactions] = useSharedState<Transaction[]>("grantflow_transactions", []);
 
   const txPending = approving || releasing;
 
@@ -77,6 +80,18 @@ export default function SponsorActions() {
       );
       setLastTx(txId);
       approveMilestone(selectedMilestone.id);
+
+      const newTx: Transaction = {
+        action: "APPROVAL",
+        actionColor: "#555555",
+        details: `Milestone ${selectedMilestone.id} Approved`,
+        date: new Date().toISOString().replace("T", " ").substring(0, 19) + " UTC",
+        txId: txId.slice(0, 6) + "..." + txId.slice(-5),
+        status: "CONFIRMED",
+        statusColor: "#4ADE80"
+      };
+      setTransactions((prev) => [newTx, ...prev]);
+
     } catch (err: any) {
       handleTxError(err, "Approval");
     } finally {
@@ -94,6 +109,14 @@ export default function SponsorActions() {
     setError(null);
     setLastTx(null);
     try {
+      // Always approve on-chain first to ensure the contract flag is set
+      console.log("[RELEASE] Sending on-chain approve first...");
+      await sendAppCall(
+        "approve",
+        walletAddress,
+        (txnGroups) => peraWallet.signTransaction(txnGroups)
+      );
+      console.log("[RELEASE] On-chain approve confirmed, now releasing...");
       const txId = await sendAppCall(
         "release",
         walletAddress,
@@ -101,6 +124,18 @@ export default function SponsorActions() {
       );
       setLastTx(txId);
       releaseMilestone(selectedMilestone.id);
+
+      const newTx: Transaction = {
+        action: "PAYMENT",
+        actionColor: "#555555",
+        details: `${selectedMilestone.amount.toFixed(2)} ALGO Released`,
+        date: new Date().toISOString().replace("T", " ").substring(0, 19) + " UTC",
+        txId: txId.slice(0, 6) + "..." + txId.slice(-5),
+        status: "CONFIRMED",
+        statusColor: "#4ADE80"
+      };
+      setTransactions((prev) => [newTx, ...prev]);
+
     } catch (err: any) {
       handleTxError(err, "Release");
     } finally {

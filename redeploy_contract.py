@@ -95,7 +95,7 @@ txn = transaction.ApplicationCreateTxn(
     local_schema=transaction.StateSchema(0, 0),
     app_args=[
         team_bytes,
-        (100_000).to_bytes(8, "big")
+        (500_000).to_bytes(8, "big")
     ]
 )
 
