@@ -1,8 +1,8 @@
 import Link from "next/link";
 
 const navLinks = [
-  { label: "DASHBOARD", href: "/dashboard" },
-  { label: "TRANSPARENCY", href: "/transparency" },
+  { label: "SPONSOR", href: "/dashboard" },
+  { label: "STUDENT", href: "/student" },
 ];
 
 const aboutLinks = ["HOW IT WORKS", "FEATURES"];
@@ -64,23 +64,9 @@ export default function Footer() {
         <span className="font-ibm-mono text-[11px] text-[#666666] tracking-[1px]">
           GRANTFLOW // BUILT ON ALGORAND TESTNET
         </span>
-        <div className="flex items-center gap-6 md:gap-[32px]">
-          <Link
-            href="/dashboard"
-            className="font-ibm-mono text-[11px] text-[#666666] tracking-[1px] hover:text-[#AAAAAA] transition-colors"
-          >
-            DASHBOARD
-          </Link>
-          <Link
-            href="/transparency"
-            className="font-ibm-mono text-[11px] text-[#666666] tracking-[1px] hover:text-[#AAAAAA] transition-colors"
-          >
-            TRANSPARENCY
-          </Link>
-          <span className="font-ibm-mono text-[11px] font-bold text-[#FFD600] tracking-[1px]">
-            TESTNET
-          </span>
-        </div>
+        <span className="font-ibm-mono text-[11px] font-bold text-[#FFD600] tracking-[1px]">
+          TESTNET
+        </span>
       </div>
     </footer>
   );
