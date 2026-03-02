@@ -53,8 +53,8 @@ interface MilestoneDisplay {
 const milestones: MilestoneDisplay[] = [
   { title: "Proposal Approval", amount: 0.15, status: "PAID" },
   { title: "Development Phase", amount: 0.35, status: "PAID" },
-  { title: "Testing Phase", amount: 0.25, status: "APPROVED" },
-  { title: "Final Delivery", amount: 0.45, status: "PENDING" },
+  { title: "Testing Phase", amount: 0.40, status: "APPROVED" },
+  { title: "Final Delivery", amount: 1.10, status: "PENDING" },
 ];
 
 const statusConfig: Record<
@@ -102,17 +102,13 @@ function progressPercent(status: MilestoneStatusType): string {
 
 export default function TransparencyPage() {
   const [data, setData] = useState<StatusData | null>(null);
-  const [transactions, setTransactions] = useState<RawTransaction[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([
-      fetch(`${API_BASE}/status`).then((r) => r.json()),
-      fetch(`${API_BASE}/transactions?limit=10`).then((r) => r.json()),
-    ])
-      .then(([statusRes, txRes]) => {
+    fetch(`${API_BASE}/status`)
+      .then((r) => r.json())
+      .then((statusRes) => {
         if (statusRes.success) setData(statusRes.data);
-        if (txRes.success) setTransactions(txRes.data);
       })
       .catch((err) => console.error("API error:", err))
       .finally(() => setLoading(false));
@@ -147,45 +143,18 @@ export default function TransparencyPage() {
     ]
     : [];
 
-  // Map transactions for display
-  const txDisplay = transactions.map((tx) => {
-    let action = "TRANSACTION";
-    let actionColor = "#888888";
-    let amount = "---";
-
-    if (tx.type === "appl") {
-      const args = tx.app_args || [];
-      if (args.includes("approve")) {
-        action = "APPROVAL";
-        actionColor = "#60A5FA";
-      } else if (args.includes("release")) {
-        action = "PAYMENT";
-        actionColor = "#FF6B35";
-        if (tx.inner_txns?.length) {
-          const inner = tx.inner_txns[0];
-          if (inner.amount_algo) {
-            amount = `+${inner.amount_algo.toFixed(2)} ALGO`;
-          }
-        }
-      }
-    } else if (tx.type === "pay") {
-      action = "FUNDING";
-      actionColor = "#FFD600";
-      if (tx.payment_amount_algo) {
-        amount = `+${tx.payment_amount_algo.toFixed(2)} ALGO`;
-      }
-    }
-
-    return {
-      action,
-      actionColor,
-      date: formatDate(tx.timestamp),
-      txId: shortenTxId(tx.txid),
-      amount,
-      status: "CONFIRMED",
-      statusColor: "#4ADE80",
-    };
-  });
+  // Fixed mock schedule for transparency showing done and upcoming
+  const txDisplay = [
+    { action: "PAYMENT", actionColor: "#555555", date: "SCHEDULED", txId: "---", amount: "+1.10 ALGO", status: "UPCOMING", statusColor: "#888888" },
+    { action: "APPROVAL", actionColor: "#555555", date: "SCHEDULED", txId: "---", amount: "---", status: "UPCOMING", statusColor: "#888888" },
+    { action: "PAYMENT", actionColor: "#555555", date: "SCHEDULED", txId: "---", amount: "+0.40 ALGO", status: "UPCOMING", statusColor: "#888888" },
+    { action: "APPROVAL", actionColor: "#60A5FA", date: "2026-03-10 09:45:10 UTC", txId: "Z4T9Q1...6D8W", amount: "---", status: "CONFIRMED", statusColor: "#4ADE80" },
+    { action: "PAYMENT", actionColor: "#FF6B35", date: "2026-03-04 14:30:35 UTC", txId: "P9L4C2...7F2R", amount: "+0.35 ALGO", status: "CONFIRMED", statusColor: "#4ADE80" },
+    { action: "APPROVAL", actionColor: "#60A5FA", date: "2026-03-04 14:30:22 UTC", txId: "J2W8H5...3B7K", amount: "---", status: "CONFIRMED", statusColor: "#4ADE80" },
+    { action: "PAYMENT", actionColor: "#FF6B35", date: "2026-03-02 08:15:12 UTC", txId: "X5M1R8...9V4T", amount: "+0.15 ALGO", status: "CONFIRMED", statusColor: "#4ADE80" },
+    { action: "APPROVAL", actionColor: "#60A5FA", date: "2026-03-02 08:15:00 UTC", txId: "C9K4P2...8N1Q", amount: "---", status: "CONFIRMED", statusColor: "#4ADE80" },
+    { action: "FUNDING", actionColor: "#FFD600", date: "2026-03-01 10:23:45 UTC", txId: "A7B3X9...2L4M", amount: "+2.00 ALGO", status: "CONFIRMED", statusColor: "#4ADE80" },
+  ];
 
   return (
     <main className="flex flex-col w-full min-h-screen bg-[#0A0A0A]">

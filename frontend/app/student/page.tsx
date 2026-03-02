@@ -30,8 +30,8 @@ interface Submission {
 const initialMilestones: Milestone[] = [
     { id: 1, title: "Proposal Approval", amount: 0.15, status: "PAID" },
     { id: 2, title: "Development Phase", amount: 0.35, status: "PAID" },
-    { id: 3, title: "Testing Phase", amount: 0.25, status: "APPROVED" },
-    { id: 4, title: "Final Delivery", amount: 0.45, status: "PENDING" },
+    { id: 3, title: "Testing Phase", amount: 0.40, status: "APPROVED" },
+    { id: 4, title: "Final Delivery", amount: 1.10, status: "PENDING" },
 ];
 
 function shortenAddr(addr: string) {
@@ -129,10 +129,10 @@ export default function StudentPage() {
                         {walletAddress ? (
                             <button
                                 onClick={disconnectWallet}
-                                className="flex items-center gap-2 h-[36px] px-4 bg-[#111111] border border-[#4ADE80] hover:border-[#F5F5F0] transition-colors cursor-pointer"
+                                className="flex items-center gap-2 h-[36px] px-4 bg-[#111111] border border-[#FFD600] hover:border-[#F5F5F0] transition-colors cursor-pointer"
                             >
                                 <span className="w-[6px] h-[6px] bg-[#4ADE80] rounded-full" />
-                                <span className="font-ibm-mono text-[10px] text-[#4ADE80] tracking-[1px]">
+                                <span className="font-ibm-mono text-[11px] text-[#FFD600] tracking-[1px]">
                                     {shortenAddr(walletAddress)}
                                 </span>
                             </button>
@@ -140,9 +140,11 @@ export default function StudentPage() {
                             <button
                                 onClick={connectWallet}
                                 disabled={isConnecting}
-                                className="nav-light-white font-grotesk text-[11px] font-bold text-[#0A0A0A] bg-[#4ADE80] tracking-[1.5px] px-[18px] py-[9px] hover:bg-[#F5F5F0] transition-colors cursor-pointer disabled:opacity-50"
+                                className="nav-light-white flex items-center justify-center h-[36px] px-5 bg-[#FFD600] text-[#0A0A0A] font-grotesk font-bold text-[11px] tracking-[1.5px] hover:bg-[#e6c200] transition-colors cursor-pointer disabled:opacity-50"
                             >
-                                {isConnecting ? "CONNECTING..." : "CONNECT WALLET"}
+                                <span className="font-grotesk text-[11px] font-bold text-[#0A0A0A] tracking-[1.5px]">
+                                    {isConnecting ? "CONNECTING..." : "CONNECT WALLET"}
+                                </span>
                             </button>
                         )}
                     </div>

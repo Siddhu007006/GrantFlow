@@ -20,7 +20,7 @@ const mockTransactions: Transaction[] = [
   { action: "APPROVAL", actionColor: "#60A5FA", details: "Milestone 2 (Development)", date: "2026-03-04 14:30:22 UTC", txId: "J2W8H5...3B7K", status: "CONFIRMED", statusColor: "#4ADE80" },
   { action: "PAYMENT", actionColor: "#FF6B35", details: "0.15 ALGO Released", date: "2026-03-02 08:15:12 UTC", txId: "X5M1R8...9V4T", status: "CONFIRMED", statusColor: "#4ADE80" },
   { action: "APPROVAL", actionColor: "#60A5FA", details: "Milestone 1 (Proposal)", date: "2026-03-02 08:15:00 UTC", txId: "C9K4P2...8N1Q", status: "CONFIRMED", statusColor: "#4ADE80" },
-  { action: "FUNDING", actionColor: "#FFD600", details: "1.20 ALGO Deposited", date: "2026-03-01 10:23:45 UTC", txId: "A7B3X9...2L4M", status: "CONFIRMED", statusColor: "#4ADE80" },
+  { action: "FUNDING", actionColor: "#FFD600", details: "2.00 ALGO Deposited", date: "2026-03-01 10:23:45 UTC", txId: "A7B3X9...2L4M", status: "CONFIRMED", statusColor: "#4ADE80" },
 ];
 
 export default function TransactionHistory() {

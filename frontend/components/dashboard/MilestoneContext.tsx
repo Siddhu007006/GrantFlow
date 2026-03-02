@@ -26,8 +26,8 @@ interface MilestoneContextType {
 const defaultMilestones: Milestone[] = [
     { id: 1, title: "Proposal Approval", amount: 0.15, status: "PAID" },
     { id: 2, title: "Development Phase", amount: 0.35, status: "PAID" },
-    { id: 3, title: "Testing Phase", amount: 0.25, status: "APPROVED" },
-    { id: 4, title: "Final Delivery", amount: 0.45, status: "PENDING" },
+    { id: 3, title: "Testing Phase", amount: 0.40, status: "APPROVED" },
+    { id: 4, title: "Final Delivery", amount: 1.10, status: "PENDING" },
 ];
 
 const MilestoneContext = createContext<MilestoneContextType>({
