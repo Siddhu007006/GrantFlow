@@ -1,70 +1,62 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMilestones, type MilestoneStatusType } from "./MilestoneContext";
 
-const API_BASE = "http://localhost:5000/api";
-
-const statusConfig = {
-  pending: {
+const statusConfig: Record<
+  MilestoneStatusType,
+  { label: string; bg: string; border: string; text: string; dot: string }
+> = {
+  PENDING: {
     label: "PENDING",
+    bg: "bg-[#1A1A1A]",
+    border: "border-[#555555]",
+    text: "text-[#555555]",
+    dot: "bg-[#555555]",
+  },
+  SUBMITTED: {
+    label: "SUBMITTED",
+    bg: "bg-[#0A1A2E]",
+    border: "border-[#60A5FA]",
+    text: "text-[#60A5FA]",
+    dot: "bg-[#60A5FA]",
+  },
+  APPROVED: {
+    label: "APPROVED",
     bg: "bg-[#332800]",
     border: "border-[#FFD600]",
     text: "text-[#FFD600]",
     dot: "bg-[#FFD600]",
   },
-  approved: {
-    label: "APPROVED",
+  PAID: {
+    label: "PAID",
     bg: "bg-[#0A2E1A]",
     border: "border-[#4ADE80]",
     text: "text-[#4ADE80]",
     dot: "bg-[#4ADE80]",
   },
-  paid: {
-    label: "PAID",
-    bg: "bg-[#1A0F00]",
-    border: "border-[#FF6B35]",
-    text: "text-[#FF6B35]",
-    dot: "bg-[#FF6B35]",
-  },
-} as const;
+};
 
-type MilestoneStatusType = keyof typeof statusConfig;
+function progressPercent(status: MilestoneStatusType): string {
+  switch (status) {
+    case "PENDING":
+      return "0%";
+    case "SUBMITTED":
+      return "33%";
+    case "APPROVED":
+      return "66%";
+    case "PAID":
+      return "100%";
+  }
+}
 
-interface Milestone {
-  name: string;
-  amount: string;
-  status: MilestoneStatusType;
+function statusIcon(status: MilestoneStatusType) {
+  if (status === "PAID") return "✓";
+  if (status === "APPROVED") return "•";
+  return " ";
 }
 
 export default function MilestoneStatus() {
-  const [milestones, setMilestones] = useState<Milestone[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch(`${API_BASE}/status`)
-      .then((res) => res.json())
-      .then((res) => {
-        if (res.success) {
-          const d = res.data;
-          let status: MilestoneStatusType = "pending";
-          if (d.total_released_algo > 0 && !d.milestone_approved) {
-            status = "paid";
-          } else if (d.milestone_approved) {
-            status = "approved";
-          }
-
-          setMilestones([
-            {
-              name: "Project Completion",
-              amount: `${d.milestone_amount_algo.toFixed(2)} ALGO`,
-              status,
-            },
-          ]);
-        }
-      })
-      .catch((err) => console.error("API error:", err))
-      .finally(() => setLoading(false));
-  }, []);
+  const { milestones } = useMilestones();
 
   return (
     <div className="flex flex-col bg-[#0F0F0F] border border-[#2D2D2D]">
@@ -74,76 +66,96 @@ export default function MilestoneStatus() {
         <span className="font-ibm-mono text-[10px] font-bold text-[#FF6B35] tracking-[2px]">
           MILESTONE STATUS
         </span>
-        {loading && (
-          <span className="font-ibm-mono text-[9px] text-[#555555] tracking-[1px] ml-auto">
-            LOADING...
-          </span>
-        )}
+        <span className="font-ibm-mono text-[9px] text-[#555555] tracking-[1px] ml-auto">
+          {milestones.filter((m) => m.status === "PAID").length}/{milestones.length} COMPLETED
+        </span>
       </div>
 
-      {/* Milestones */}
+      {/* Milestone cards */}
       <div className="flex flex-col">
-        {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <span className="font-ibm-mono text-[11px] text-[#555555] tracking-[1px]">
-              FETCHING MILESTONE DATA...
-            </span>
-          </div>
-        ) : (
-          milestones.map((m) => {
-            const config = statusConfig[m.status];
-            return (
-              <div key={m.name} className="flex flex-col gap-4 px-6 py-5">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex flex-col gap-2">
-                    <span className="font-grotesk text-[16px] font-bold text-[#F5F5F0] tracking-[0.5px]">
-                      {m.name}
-                    </span>
-                    <span className="font-ibm-mono text-[12px] text-[#888888] tracking-[1px]">
-                      {m.amount}
-                    </span>
-                  </div>
-                  <div
-                    className={`flex items-center gap-2 h-[28px] px-3 ${config.bg} border ${config.border}`}
+        {milestones.map((m, i) => {
+          const config = statusConfig[m.status];
+          const icon = statusIcon(m.status);
+          const isPaid = m.status === "PAID";
+
+          return (
+            <div
+              key={m.id}
+              className={`flex flex-col gap-3 px-6 py-4 ${i < milestones.length - 1 ? "border-b border-[#1D1D1D]" : ""
+                }`}
+            >
+              <div className="flex items-center gap-3">
+                {/* Checkmark/dot indicator */}
+                <div
+                  className={`flex items-center justify-center w-[24px] h-[24px] shrink-0 border ${isPaid
+                      ? "border-[#4ADE80] bg-[#0A2E1A]"
+                      : m.status === "APPROVED"
+                        ? "border-[#FFD600] bg-[#1A1500]"
+                        : "border-[#333333] bg-[#1A1A1A]"
+                    }`}
+                >
+                  <span
+                    className={`font-ibm-mono text-[11px] font-bold ${isPaid
+                        ? "text-[#4ADE80]"
+                        : m.status === "APPROVED"
+                          ? "text-[#FFD600]"
+                          : "text-[#555555]"
+                      }`}
                   >
-                    <span className={`w-[5px] h-[5px] rounded-full ${config.dot}`} />
-                    <span className={`font-ibm-mono text-[9px] font-bold tracking-[1.5px] ${config.text}`}>
-                      {config.label}
-                    </span>
-                  </div>
+                    {icon}
+                  </span>
                 </div>
 
-                {/* Progress bar */}
-                <div className="flex flex-col gap-2">
-                  <div className="w-full h-[4px] bg-[#1A1A1A]">
-                    <div
-                      className="h-full bg-[#FFD600] transition-all duration-500"
-                      style={{
-                        width:
-                          m.status === "paid"
-                            ? "100%"
-                            : m.status === "approved"
-                              ? "66%"
-                              : "33%",
-                      }}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="font-ibm-mono text-[9px] text-[#555555] tracking-[1px]">
-                      SUBMITTED
-                    </span>
-                    <span className="font-ibm-mono text-[9px] text-[#555555] tracking-[1px]">
-                      APPROVED
-                    </span>
-                    <span className="font-ibm-mono text-[9px] text-[#555555] tracking-[1px]">
-                      PAID
-                    </span>
-                  </div>
+                {/* Title + amount */}
+                <div className="flex flex-col flex-1 min-w-0">
+                  <span
+                    className={`font-grotesk text-[13px] font-bold tracking-[0.5px] ${isPaid ? "text-[#888888]" : "text-[#F5F5F0]"
+                      }`}
+                  >
+                    {m.title}
+                  </span>
+                  <span className="font-ibm-mono text-[10px] text-[#666666] tracking-[1px]">
+                    {m.amount.toFixed(2)} ALGO
+                  </span>
+                </div>
+
+                {/* Status badge */}
+                <div
+                  className={`flex items-center gap-2 h-[24px] px-3 shrink-0 ${config.bg} border ${config.border}`}
+                >
+                  <span className={`w-[4px] h-[4px] rounded-full ${config.dot}`} />
+                  <span
+                    className={`font-ibm-mono text-[8px] font-bold tracking-[1.5px] ${config.text}`}
+                  >
+                    {config.label}
+                  </span>
                 </div>
               </div>
-            );
-          })
-        )}
+
+              {/* Progress bar */}
+              <div className="flex flex-col gap-1 pl-[36px]">
+                <div className="w-full h-[3px] bg-[#1A1A1A]">
+                  <div
+                    className={`h-full transition-all duration-500 ${isPaid ? "bg-[#4ADE80]" : "bg-[#FFD600]"
+                      }`}
+                    style={{ width: progressPercent(m.status) }}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="font-ibm-mono text-[7px] text-[#444444] tracking-[1px]">
+                    SUBMITTED
+                  </span>
+                  <span className="font-ibm-mono text-[7px] text-[#444444] tracking-[1px]">
+                    APPROVED
+                  </span>
+                  <span className="font-ibm-mono text-[7px] text-[#444444] tracking-[1px]">
+                    PAID
+                  </span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

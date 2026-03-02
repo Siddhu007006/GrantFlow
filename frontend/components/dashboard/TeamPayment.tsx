@@ -1,78 +1,33 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { RECEIVER_ADDRESS } from "@/lib/constants";
-
-const API_BASE = "http://localhost:5000/api";
+import { useMilestones, type MilestoneStatusType } from "./MilestoneContext";
 
 function shortenAddress(addr: string) {
   if (!addr || addr.length < 10) return addr || "---";
   return addr.slice(0, 6) + "..." + addr.slice(-4);
 }
 
-interface StatusData {
-  team: string;
-  total_released_algo: number;
-  milestone_amount_algo: number;
-  milestone_approved: boolean;
-  team_balance_algo: number;
+function paymentLabel(status: MilestoneStatusType): {
+  label: string;
+  text: string;
+  dot: string;
+} {
+  switch (status) {
+    case "PAID":
+      return { label: "RECEIVED", text: "text-[#4ADE80]", dot: "bg-[#4ADE80]" };
+    case "APPROVED":
+      return { label: "PENDING", text: "text-[#FFD600]", dot: "bg-[#FFD600]" };
+    case "SUBMITTED":
+      return { label: "PENDING", text: "text-[#60A5FA]", dot: "bg-[#60A5FA]" };
+    case "PENDING":
+    default:
+      return { label: "LOCKED", text: "text-[#555555]", dot: "bg-[#555555]" };
+  }
 }
 
 export default function TeamPayment() {
-  const [data, setData] = useState<StatusData | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch(`${API_BASE}/status`)
-      .then((res) => res.json())
-      .then((res) => {
-        if (res.success) setData(res.data);
-      })
-      .catch((err) => console.error("API error:", err))
-      .finally(() => setLoading(false));
-  }, []);
-
-  // Determine payment status
-  let statusLabel = "AWAITING APPROVAL";
-  let statusBg = "bg-[#332800]";
-  let statusBorder = "border-[#FFD600]";
-  let statusText = "text-[#FFD600]";
-  let statusDot = "bg-[#FFD600]";
-
-  if (data) {
-    if (data.total_released_algo > 0) {
-      statusLabel = "FUNDS RECEIVED";
-      statusBg = "bg-[#0A2E1A]";
-      statusBorder = "border-[#4ADE80]";
-      statusText = "text-[#4ADE80]";
-      statusDot = "bg-[#4ADE80]";
-    } else if (data.milestone_approved) {
-      statusLabel = "APPROVED - AWAITING RELEASE";
-      statusBg = "bg-[#0A1A2E]";
-      statusBorder = "border-[#60A5FA]";
-      statusText = "text-[#60A5FA]";
-      statusDot = "bg-[#60A5FA]";
-    }
-  }
-
-  const paymentData = data
-    ? [
-      { key: "TEAM WALLET", value: shortenAddress(RECEIVER_ADDRESS) },
-      {
-        key: "AMOUNT RECEIVED",
-        value: `${data.total_released_algo.toFixed(2)} ALGO`,
-      },
-      {
-        key: "PENDING AMOUNT",
-        value: `${data.milestone_amount_algo.toFixed(2)} ALGO`,
-        accent: true,
-      },
-      {
-        key: "TEAM BALANCE",
-        value: `${data.team_balance_algo.toFixed(2)} ALGO`,
-      },
-    ]
-    : [];
+  const { milestones, totalPaid, totalPending, totalGrant } = useMilestones();
 
   return (
     <div className="flex flex-col bg-[#0F0F0F] border border-[#2D2D2D]">
@@ -85,49 +40,77 @@ export default function TeamPayment() {
       </div>
 
       <div className="flex flex-col">
-        {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <span className="font-ibm-mono text-[11px] text-[#555555] tracking-[1px]">
-              FETCHING PAYMENT DATA...
-            </span>
-          </div>
-        ) : (
-          <>
-            {/* Payment status */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[#1D1D1D]">
-              <span className="font-ibm-mono text-[10px] text-[#555555] tracking-[1.5px]">
-                PAYMENT STATUS
+        {/* Per-milestone payment breakdown header */}
+        <div className="flex items-center justify-between px-6 py-3 border-b border-[#2D2D2D] bg-[#0D0D0D]">
+          <span className="font-ibm-mono text-[9px] text-[#555555] tracking-[1.5px]">
+            MILESTONE PAYMENTS
+          </span>
+        </div>
+
+        {/* Per-milestone rows */}
+        {milestones.map((m, i) => {
+          const pl = paymentLabel(m.status);
+          return (
+            <div
+              key={m.id}
+              className={`flex items-center justify-between px-6 py-3 ${i < milestones.length - 1 ? "border-b border-[#1D1D1D]" : "border-b border-[#2D2D2D]"
+                }`}
+            >
+              <span className="font-ibm-mono text-[10px] text-[#888888] tracking-[0.5px]">
+                {m.title}
               </span>
-              <div
-                className={`flex items-center gap-2 h-[24px] px-3 ${statusBg} border ${statusBorder}`}
-              >
-                <span className={`w-[4px] h-[4px] rounded-full ${statusDot}`} />
-                <span className={`font-ibm-mono text-[9px] font-bold tracking-[1.5px] ${statusText}`}>
-                  {statusLabel}
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1.5">
+                  <span className={`w-[4px] h-[4px] rounded-full ${pl.dot}`} />
+                  <span className={`font-ibm-mono text-[8px] font-bold tracking-[1.5px] ${pl.text}`}>
+                    {pl.label}
+                  </span>
+                </div>
+                <span className={`font-ibm-mono text-[10px] tracking-[1px] ${m.status === "PAID" ? "text-[#F5F5F0]" : "text-[#555555]"
+                  }`}>
+                  {m.amount.toFixed(2)} ALGO
                 </span>
               </div>
             </div>
+          );
+        })}
 
-            {/* Data rows */}
-            {paymentData.map((item, i) => (
-              <div
-                key={item.key}
-                className={`flex items-center justify-between px-6 py-4 ${i < paymentData.length - 1 ? "border-b border-[#1D1D1D]" : ""
-                  }`}
-              >
-                <span className="font-ibm-mono text-[10px] text-[#555555] tracking-[1.5px]">
-                  {item.key}
-                </span>
-                <span
-                  className={`font-ibm-mono text-[11px] tracking-[1px] ${item.accent ? "text-[#FFD600] font-bold" : "text-[#F5F5F0]"
-                    }`}
-                >
-                  {item.value}
-                </span>
-              </div>
-            ))}
-          </>
-        )}
+        {/* Summary totals */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[#1D1D1D]">
+          <span className="font-ibm-mono text-[10px] text-[#555555] tracking-[1.5px]">
+            TEAM WALLET
+          </span>
+          <span className="font-ibm-mono text-[11px] text-[#F5F5F0] tracking-[1px]">
+            {shortenAddress(RECEIVER_ADDRESS)}
+          </span>
+        </div>
+
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[#1D1D1D]">
+          <span className="font-ibm-mono text-[10px] text-[#555555] tracking-[1.5px]">
+            TOTAL RECEIVED
+          </span>
+          <span className="font-ibm-mono text-[11px] text-[#4ADE80] font-bold tracking-[1px]">
+            {totalPaid.toFixed(2)} ALGO
+          </span>
+        </div>
+
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[#1D1D1D]">
+          <span className="font-ibm-mono text-[10px] text-[#555555] tracking-[1.5px]">
+            PENDING RELEASE
+          </span>
+          <span className="font-ibm-mono text-[11px] text-[#FFD600] font-bold tracking-[1px]">
+            {totalPending.toFixed(2)} ALGO
+          </span>
+        </div>
+
+        <div className="flex items-center justify-between px-6 py-4">
+          <span className="font-ibm-mono text-[10px] text-[#555555] tracking-[1.5px]">
+            TOTAL GRANT
+          </span>
+          <span className="font-ibm-mono text-[11px] text-[#F5F5F0] tracking-[1px]">
+            {totalGrant.toFixed(2)} ALGO
+          </span>
+        </div>
       </div>
     </div>
   );
