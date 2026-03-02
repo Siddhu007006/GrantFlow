@@ -92,7 +92,7 @@ export default function Navbar() {
           <Link href="/student" className="border border-[#333] hover:bg-[#1A1A1A] hover:border-[#4ADE80] text-[#888] hover:text-[#4ADE80] px-5 py-[10px] rounded-full font-ibm-mono text-[10px] tracking-[1.5px] transition-all duration-300">
             STUDENT
           </Link>
-          <Link href="/dashboard" className="bg-[#111] border border-[#FFD600] text-[#FFD600] hover:bg-[#FFD600] hover:text-[#0A0A0A] hover:shadow-[0_0_20px_rgba(255,214,0,0.3)] px-5 py-[10px] rounded-full font-grotesk font-bold text-[11px] tracking-[1.5px] transition-all duration-300">
+          <Link href="/dashboard" className="nav-light bg-[#111] border border-[#FFD600] text-[#FFD600] hover:bg-[#FFD600] hover:text-[#0A0A0A] px-5 py-[10px] rounded-full font-grotesk font-bold text-[11px] tracking-[1.5px] transition-all duration-300">
             SPONSOR
           </Link>
         </div>
@@ -147,7 +147,7 @@ export default function Navbar() {
             <Link
               href="/dashboard"
               onClick={() => setMenuOpen(false)}
-              className="w-full text-center bg-[#111] border border-[#FFD600] text-[#FFD600] hover:bg-[#FFD600] hover:text-[#0A0A0A] px-5 py-[12px] rounded-full font-grotesk font-bold text-[12px] tracking-[1.5px] transition-all duration-300"
+              className="nav-light w-full text-center bg-[#111] border border-[#FFD600] text-[#FFD600] hover:bg-[#FFD600] hover:text-[#0A0A0A] px-5 py-[12px] rounded-full font-grotesk font-bold text-[12px] tracking-[1.5px] transition-all duration-300"
             >
               SPONSOR DASHBOARD
             </Link>
