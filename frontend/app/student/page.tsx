@@ -38,6 +38,13 @@ function shortenAddr(addr: string) {
     return addr.slice(0, 6) + "..." + addr.slice(-4);
 }
 
+const statusBadge: Record<string, { bg: string; border: string; text: string; dot: string }> = {
+    PENDING: { bg: "bg-[#1A1A1A]", border: "border-[#555555]", text: "text-[#555555]", dot: "bg-[#555555]" },
+    SUBMITTED: { bg: "bg-[#0A1A2E]", border: "border-[#60A5FA]", text: "text-[#60A5FA]", dot: "bg-[#60A5FA]" },
+    APPROVED: { bg: "bg-[#332800]", border: "border-[#FFD600]", text: "text-[#FFD600]", dot: "bg-[#FFD600]" },
+    PAID: { bg: "bg-[#0A2E1A]", border: "border-[#4ADE80]", text: "text-[#4ADE80]", dot: "bg-[#4ADE80]" },
+};
+
 export default function StudentPage() {
     const { walletAddress, isConnecting, connectWallet, disconnectWallet } = useWallet();
     const [milestones, setMilestones] = useState<Milestone[]>(initialMilestones);
@@ -50,7 +57,8 @@ export default function StudentPage() {
     const [notes, setNotes] = useState("");
 
     const fundsReceived = milestones.filter(m => m.status === "PAID").reduce((sum, m) => sum + m.amount, 0);
-    const remainingFunds = TOTAL_GRANT - fundsReceived;
+    const remainingFunds = milestones.filter(m => m.status !== "PAID").reduce((sum, m) => sum + m.amount, 0);
+    const calculatedTotalGrant = fundsReceived + remainingFunds;
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -159,7 +167,7 @@ export default function StudentPage() {
                                 </div>
                                 <div className="flex flex-col gap-2">
                                     <span className="font-ibm-mono text-[10px] text-[#555555]">TOTAL GRANT</span>
-                                    <span className="font-ibm-mono text-[13px] text-[#4ADE80]">{TOTAL_GRANT.toFixed(2)} ALGO</span>
+                                    <span className="font-ibm-mono text-[13px] text-[#4ADE80]">{calculatedTotalGrant.toFixed(2)} ALGO</span>
                                 </div>
                                 <div className="flex flex-col gap-2">
                                     <span className="font-ibm-mono text-[10px] text-[#555555]">RECEIVED</span>
@@ -186,12 +194,11 @@ export default function StudentPage() {
                                         </div>
                                         <div className="flex items-center gap-6">
                                             <span className="font-ibm-mono text-[13px] text-[#888888]">{m.amount.toFixed(2)} ALGO</span>
-                                            <div className={`flex items-center justify-center px-3 py-1 border ${m.status === "PAID" ? "bg-[#112211] border-[#4ADE80] text-[#4ADE80]" :
-                                                m.status === "APPROVED" ? "bg-[#112211] border-[#4ADE80] text-[#4ADE80]" :
-                                                    m.status === "SUBMITTED" ? "bg-[#222211] border-[#FFD600] text-[#FFD600]" :
-                                                        "bg-[#1A1A1A] border-[#333333] text-[#888888]"
-                                                }`}>
-                                                <span className="font-ibm-mono text-[10px] tracking-[1px]">{m.status}</span>
+                                            <div className={`flex items-center gap-2 h-[24px] px-3 shrink-0 ${statusBadge[m.status].bg} border ${statusBadge[m.status].border}`}>
+                                                <span className={`w-[4px] h-[4px] rounded-full ${statusBadge[m.status].dot}`} />
+                                                <span className={`font-ibm-mono text-[8px] font-bold tracking-[1.5px] ${statusBadge[m.status].text}`}>
+                                                    {m.status}
+                                                </span>
                                             </div>
                                         </div>
                                     </div>

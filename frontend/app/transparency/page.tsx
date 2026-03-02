@@ -122,17 +122,17 @@ export default function TransparencyPage() {
     ? [
       {
         key: "TOTAL GRANT VALUE",
-        value: `${(milestones.reduce((s, m) => s + m.amount, 0)).toFixed(2)}`,
+        value: `${(data.total_released_algo + data.contract_balance_algo).toFixed(2)}`,
         color: "#FFD600",
       },
       {
         key: "FUNDS DISTRIBUTED",
-        value: `${milestones.filter((m) => m.status === "PAID").reduce((s, m) => s + m.amount, 0).toFixed(2)}`,
+        value: `${data.total_released_algo.toFixed(2)}`,
         color: "#F5F5F0",
       },
       {
         key: "REMAINING FUNDS",
-        value: `${milestones.filter((m) => m.status !== "PAID").reduce((s, m) => s + m.amount, 0).toFixed(2)}`,
+        value: `${data.contract_balance_algo.toFixed(2)}`,
         color: "#4ADE80",
       },
     ]

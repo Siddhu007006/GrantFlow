@@ -42,7 +42,7 @@ export default function ContractOverview() {
       { key: "TEAM ADDRESS", value: shortenAddress(data.team) },
       {
         key: "TOTAL FUNDS LOCKED",
-        value: `${data.contract_balance_algo.toFixed(2)} ALGO`,
+        value: `${(data.total_released_algo + data.contract_balance_algo).toFixed(2)} ALGO`,
         highlight: true,
       },
       {
@@ -51,7 +51,7 @@ export default function ContractOverview() {
       },
       {
         key: "REMAINING BALANCE",
-        value: `${(data.contract_balance_algo).toFixed(2)} ALGO`,
+        value: `${data.contract_balance_algo.toFixed(2)} ALGO`,
         accent: true,
       },
     ]
@@ -92,10 +92,10 @@ export default function ContractOverview() {
               </span>
               <span
                 className={`font-ibm-mono text-[11px] tracking-[1px] ${item.highlight
-                    ? "text-[#FFD600] font-bold"
-                    : item.accent
-                      ? "text-[#4ADE80] font-bold"
-                      : "text-[#F5F5F0]"
+                  ? "text-[#FFD600] font-bold"
+                  : item.accent
+                    ? "text-[#4ADE80] font-bold"
+                    : "text-[#F5F5F0]"
                   }`}
               >
                 {item.value}
