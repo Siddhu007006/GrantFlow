@@ -28,9 +28,10 @@ CORS(app)  # Allow frontend to call API from different port
 def api_status():
     """Returns the complete grant status including balances and state."""
     try:
-        state = get_grant_state()
+        app_id = request.args.get("app_id", None, type=int)
+        state = get_grant_state(app_id=app_id)
         team_addr = state.get("team", "")
-        status = get_grant_status(team_addr)
+        status = get_grant_status(team_addr, app_id=app_id)
         return jsonify({"success": True, "data": status})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
@@ -43,7 +44,8 @@ def api_status():
 def api_state():
     """Returns raw global state from the smart contract."""
     try:
-        state = get_grant_state()
+        app_id = request.args.get("app_id", None, type=int)
+        state = get_grant_state(app_id=app_id)
         return jsonify({"success": True, "data": state})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
@@ -69,7 +71,8 @@ def api_balance(address):
 def api_contract_address():
     """Returns the derived escrow/contract address."""
     try:
-        addr = get_contract_address()
+        app_id = request.args.get("app_id", None, type=int)
+        addr = get_contract_address(app_id=app_id)
         return jsonify({"success": True, "data": {"contract_address": addr}})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
@@ -82,9 +85,10 @@ def api_contract_address():
 def api_transactions():
     """Returns recent transactions for the contract address."""
     try:
+        app_id = request.args.get("app_id", None, type=int)
         limit = request.args.get("limit", 10, type=int)
         address = request.args.get("address", None)
-        txns = get_transactions(address=address, limit=limit)
+        txns = get_transactions(address=address, limit=limit, app_id=app_id)
         return jsonify({"success": True, "data": txns})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
@@ -97,7 +101,9 @@ def api_transactions():
 def api_approve():
     """Sponsor approves the current milestone. Returns TX ID."""
     try:
-        txid = approve_milestone()
+        data = request.get_json() or {}
+        app_id = data.get("app_id")
+        txid = approve_milestone(app_id=app_id)
         return jsonify({"success": True, "data": {"txid": txid, "action": "approve"}})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
@@ -110,7 +116,9 @@ def api_approve():
 def api_release():
     """Release milestone funds to the team wallet. Returns TX ID."""
     try:
-        txid = release_funds()
+        data = request.get_json() or {}
+        app_id = data.get("app_id")
+        txid = release_funds(app_id=app_id)
         return jsonify({"success": True, "data": {"txid": txid, "action": "release"}})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500

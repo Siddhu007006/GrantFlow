@@ -22,6 +22,8 @@ interface WalletContextType {
     disconnectWallet: () => void;
     resetConnection: () => Promise<void>;
     peraWallet: PeraWallet | null;
+    activeRole: "sponsor" | "student";
+    setActiveRole: (role: "sponsor" | "student") => void;
 }
 
 const WalletContext = createContext<WalletContextType>({
@@ -32,6 +34,8 @@ const WalletContext = createContext<WalletContextType>({
     disconnectWallet: () => { },
     resetConnection: async () => { },
     peraWallet: null,
+    activeRole: "sponsor",
+    setActiveRole: () => { },
 });
 
 export function useWallet() {
@@ -46,12 +50,36 @@ function createPeraWallet() {
 }
 
 export function WalletProvider({ children }: { children: ReactNode }) {
+    const storageKey = "grantflow_wallet";
+    const [activeRole, setActiveRoleState] = useState<"sponsor" | "student">("sponsor");
+
+    // Persist role across reloads
+    useEffect(() => {
+        const savedRole = localStorage.getItem("grantflow_role") as "sponsor" | "student";
+        if (savedRole) {
+            setActiveRoleState(savedRole);
+        }
+    }, []);
+
+    const setActiveRole = useCallback((role: "sponsor" | "student") => {
+        setActiveRoleState(role);
+        localStorage.setItem("grantflow_role", role);
+    }, []);
+
     const [walletAddress, setWalletAddress] = useState<string | null>(null);
     const [isConnecting, setIsConnecting] = useState(false);
     const peraRef = useRef<PeraWallet | null>(null);
     const [peraState, setPeraState] = useState<PeraWallet | null>(null);
 
     const isSponsor = walletAddress === SPONSOR_ADDRESS;
+
+    // We maintain a pseudo-separation using localStorage so reloading respects the page
+    useEffect(() => {
+        const saved = localStorage.getItem(storageKey);
+        if (saved) {
+            setWalletAddress(saved);
+        }
+    }, [storageKey]);
 
     // Create and set pera instance
     const initPera = useCallback(() => {
@@ -67,11 +95,20 @@ export function WalletProvider({ children }: { children: ReactNode }) {
             .reconnectSession()
             .then((accounts) => {
                 if (accounts.length > 0) {
-                    setWalletAddress(accounts[0]);
+                    // Only apply session if it matches our saved separated state to prevent cross-bleeding
+                    const saved = localStorage.getItem(storageKey);
+                    if (saved === accounts[0] || !saved) {
+                        setWalletAddress(accounts[0]);
+                        localStorage.setItem(storageKey, accounts[0]);
+                    } else if (saved !== accounts[0]) {
+                        // Allow taking over explicitly if reconnecting a new wallet
+                        setWalletAddress(accounts[0]);
+                        localStorage.setItem(storageKey, accounts[0]);
+                    }
                 }
             })
             .catch(() => { });
-    }, [initPera]);
+    }, [initPera, storageKey]);
 
     const connectWallet = useCallback(async () => {
         let pw = peraRef.current;
@@ -81,6 +118,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
             const accounts = await pw.connect();
             if (accounts.length > 0) {
                 setWalletAddress(accounts[0]);
+                localStorage.setItem(storageKey, accounts[0]);
             }
         } catch (error: any) {
             if (error?.data?.type !== "CONNECT_MODAL_CLOSED") {
@@ -89,7 +127,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         } finally {
             setIsConnecting(false);
         }
-    }, [initPera]);
+    }, [initPera, storageKey]);
 
     const disconnectWallet = useCallback(() => {
         try {
@@ -98,7 +136,8 @@ export function WalletProvider({ children }: { children: ReactNode }) {
             // ignore disconnect errors
         }
         setWalletAddress(null);
-    }, []);
+        localStorage.removeItem(storageKey);
+    }, [storageKey]);
 
     // Reset: destroy old instance, create fresh one, reconnect
     const resetConnection = useCallback(async () => {
@@ -114,13 +153,20 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         try {
             const accounts = await pw.reconnectSession();
             if (accounts.length > 0) {
-                setWalletAddress(accounts[0]);
-                console.log("[Wallet] Reconnected:", accounts[0]);
+                const saved = localStorage.getItem(storageKey);
+                if (saved === accounts[0] || !saved) {
+                    setWalletAddress(accounts[0]);
+                    localStorage.setItem(storageKey, accounts[0]);
+                    console.log("[Wallet] Reconnected:", accounts[0]);
+                } else if (saved !== accounts[0]) {
+                    setWalletAddress(accounts[0]);
+                    localStorage.setItem(storageKey, accounts[0]);
+                }
             }
         } catch (e) {
             console.log("[Wallet] No existing session after reset");
         }
-    }, [initPera]);
+    }, [initPera, storageKey]);
 
     return (
         <WalletContext.Provider
@@ -132,6 +178,8 @@ export function WalletProvider({ children }: { children: ReactNode }) {
                 disconnectWallet,
                 resetConnection,
                 peraWallet: peraState,
+                activeRole,
+                setActiveRole,
             }}
         >
             {children}

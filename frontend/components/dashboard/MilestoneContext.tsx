@@ -1,7 +1,8 @@
 "use client";
 
-import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
 import { useSharedState } from "@/lib/useSharedState";
+import { getInitialMilestones } from "@/lib/projectsStore";
 
 export type MilestoneStatusType = "PENDING" | "SUBMITTED" | "APPROVED" | "PAID";
 
@@ -24,17 +25,10 @@ interface MilestoneContextType {
     totalGrant: number;
 }
 
-const defaultMilestones: Milestone[] = [
-    { id: 1, title: "Proposal Approval", amount: 0.50, status: "PENDING" },
-    { id: 2, title: "Development Phase", amount: 0.50, status: "PENDING" },
-    { id: 3, title: "Testing Phase", amount: 0.50, status: "PENDING" },
-    { id: 4, title: "Final Delivery", amount: 0.50, status: "PENDING" },
-];
-
 const MilestoneContext = createContext<MilestoneContextType>({
-    milestones: defaultMilestones,
+    milestones: [],
     selectedId: 3,
-    selectedMilestone: defaultMilestones[2],
+    selectedMilestone: undefined,
     selectMilestone: () => { },
     approveMilestone: () => { },
     releaseMilestone: () => { },
@@ -47,8 +41,8 @@ export function useMilestones() {
     return useContext(MilestoneContext);
 }
 
-export function MilestoneProvider({ children }: { children: ReactNode }) {
-    const [milestones, setMilestones] = useSharedState<Milestone[]>("grantflow_milestones", defaultMilestones);
+export function MilestoneProvider({ children, appId }: { children: ReactNode, appId: number }) {
+    const [milestones, setMilestones] = useSharedState<Milestone[]>(`grantflow_milestones_app_${appId}`, getInitialMilestones(appId) as any);
     const [selectedId, setSelectedId] = useState(3); // Default to Testing Phase
 
     const selectedMilestone = milestones.find((m) => m.id === selectedId);
@@ -57,7 +51,8 @@ export function MilestoneProvider({ children }: { children: ReactNode }) {
         setSelectedId(id);
     }, []);
 
-    const approveMilestone = useCallback((id: number) => {
+    const approveMilestone = useCallback(async (id: number) => {
+        // Optimistic UI update
         setMilestones((prev) =>
             prev.map((m) =>
                 m.id === id && (m.status === "PENDING" || m.status === "SUBMITTED")
@@ -65,9 +60,21 @@ export function MilestoneProvider({ children }: { children: ReactNode }) {
                     : m
             )
         );
-    }, []);
 
-    const releaseMilestone = useCallback((id: number) => {
+        // Actual network request
+        try {
+            await fetch("http://127.0.0.1:5000/api/approve", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ app_id: appId })
+            });
+        } catch (err) {
+            console.error("Error approving milestone:", err);
+        }
+    }, [appId, setMilestones]);
+
+    const releaseMilestone = useCallback(async (id: number) => {
+        // Optimistic UI update
         setMilestones((prev) =>
             prev.map((m) =>
                 m.id === id && m.status === "APPROVED"
@@ -75,17 +82,22 @@ export function MilestoneProvider({ children }: { children: ReactNode }) {
                     : m
             )
         );
-    }, []);
 
-    const totalPaid = milestones
-        .filter((m) => m.status === "PAID")
-        .reduce((sum, m) => sum + m.amount, 0);
+        // Actual network request
+        try {
+            await fetch("http://127.0.0.1:5000/api/release", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ app_id: appId })
+            });
+        } catch (err) {
+            console.error("Error releasing milestone:", err);
+        }
+    }, [appId, setMilestones]);
 
-    const totalPending = milestones
-        .filter((m) => m.status !== "PAID")
-        .reduce((sum, m) => sum + m.amount, 0);
-
-    const totalGrant = milestones.reduce((sum, m) => sum + m.amount, 0);
+    const totalPaid = milestones.filter(m => m.status === "PAID").reduce((sum, m) => sum + m.amount, 0);
+    const totalPending = milestones.filter(m => m.status !== "PAID").reduce((sum, m) => sum + m.amount, 0);
+    const totalGrant = totalPaid + totalPending;
 
     return (
         <MilestoneContext.Provider

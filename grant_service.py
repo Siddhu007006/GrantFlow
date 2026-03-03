@@ -14,7 +14,7 @@ from algosdk.logic import get_application_address
 ALGOD_ADDRESS = "https://testnet-api.algonode.cloud"
 ALGOD_TOKEN = ""
 
-APP_ID = 756430745
+APP_ID = 756442667
 SPONSOR_MNEMONIC = "ride youth ghost nice common little cushion nurse veteran cube jazz purity account cry excuse uphold stick like mind crazy judge corn banner above shock"
 
 # Derive sponsor credentials
@@ -29,9 +29,11 @@ client = algod.AlgodClient(ALGOD_TOKEN, ALGOD_ADDRESS)
 # 🏦 Contract Address
 # ============================================
 
-def get_contract_address():
+def get_contract_address(app_id=None):
     """Get the escrow/application account address."""
-    return get_application_address(APP_ID)
+    if app_id is None:
+        app_id = APP_ID
+    return get_application_address(app_id)
 
 
 # ============================================
@@ -48,18 +50,21 @@ def get_balance(address):
 # 🟡 Approve Milestone
 # ============================================
 
-def approve_milestone():
+def approve_milestone(app_id=None):
     """
     Sponsor approves the current milestone.
     Sets approved = 1 in the contract global state.
     Returns the transaction ID.
     """
+    if app_id is None:
+        app_id = APP_ID
+
     params = client.suggested_params()
 
     txn = transaction.ApplicationNoOpTxn(
         sender,
         params,
-        APP_ID,
+        app_id,
         app_args=[b"approve"]
     )
 
@@ -75,18 +80,21 @@ def approve_milestone():
 # 💸 Release Funds
 # ============================================
 
-def release_funds():
+def release_funds(app_id=None):
     """
     Release milestone funds to the team wallet.
     Requires approved = 1. Sends milestone_amt ALGO to team address.
     Returns the transaction ID.
     """
+    if app_id is None:
+        app_id = APP_ID
+
     params = client.suggested_params()
 
     txn = transaction.ApplicationNoOpTxn(
         sender,
         params,
-        APP_ID,
+        app_id,
         app_args=[b"release"]
     )
 
@@ -102,7 +110,7 @@ def release_funds():
 # 📊 Grant State & Summary
 # ============================================
 
-def get_grant_state():
+def get_grant_state(app_id=None):
     """
     Read the full global state of the smart contract.
     Returns a dict with all on-chain values.
@@ -110,7 +118,10 @@ def get_grant_state():
     import base64
     from algosdk import encoding
 
-    app_info = client.application_info(APP_ID)
+    if app_id is None:
+        app_id = APP_ID
+
+    app_info = client.application_info(app_id)
     global_state = app_info.get("params", {}).get("global-state", [])
 
     state = {}
@@ -135,13 +146,16 @@ def get_grant_state():
     return state
 
 
-def get_grant_status(team_address):
+def get_grant_status(team_address, app_id=None):
     """
     Get a human-readable summary of the grant status.
     Includes contract address, balances, and on-chain state.
     """
-    contract_addr = get_contract_address()
-    state = get_grant_state()
+    if app_id is None:
+        app_id = APP_ID
+
+    contract_addr = get_contract_address(app_id)
+    state = get_grant_state(app_id)
 
     contract_balance = get_balance(contract_addr)
     team_balance = get_balance(team_address)
@@ -151,7 +165,7 @@ def get_grant_status(team_address):
     milestone_amt = state.get("milestone_amt", 0)
 
     return {
-        "app_id": APP_ID,
+        "app_id": app_id,
         "contract_address": contract_addr,
         "sponsor": state.get("sponsor", "—"),
         "team": state.get("team", "—"),
@@ -169,7 +183,7 @@ def get_grant_status(team_address):
 # 📜 Transaction History
 # ============================================
 
-def get_transactions(address=None, limit=10):
+def get_transactions(address=None, limit=10, app_id=None):
     """
     Fetch recent transactions for a given address (defaults to contract address).
     Uses the Indexer API.
@@ -179,8 +193,11 @@ def get_transactions(address=None, limit=10):
     indexer_address = "https://testnet-idx.algonode.cloud"
     indexer_client = indexer.IndexerClient("", indexer_address)
 
+    if app_id is None:
+        app_id = APP_ID
+
     if address is None:
-        address = get_contract_address()
+        address = get_contract_address(app_id)
 
     response = indexer_client.search_transactions_by_address(
         address,

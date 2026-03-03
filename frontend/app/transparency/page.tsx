@@ -2,46 +2,12 @@
 
 import { useEffect, useState } from "react";
 import TransparencyHeader from "@/components/transparency/TransparencyHeader";
-import ProjectsOverview, { type Project } from "@/components/dashboard/ProjectsOverview";
+import ProjectsOverview from "@/components/dashboard/ProjectsOverview";
+import { type Project, getInitialMilestones } from "@/lib/projectsStore";
 import { useSharedState } from "@/lib/useSharedState";
+import { getInitialTransactions } from "@/components/dashboard/TransactionHistory";
 
-const API_BASE = "http://localhost:5000/api";
-
-function shortenAddress(addr: string) {
-  if (!addr || addr.length < 10) return addr || "---";
-  return addr.slice(0, 6) + "..." + addr.slice(-4);
-}
-
-function formatDate(timestamp: number): string {
-  if (!timestamp) return "---";
-  const d = new Date(timestamp * 1000);
-  return d.toISOString().replace("T", " ").slice(0, 19) + " UTC";
-}
-
-function shortenTxId(txId: string): string {
-  if (!txId || txId.length < 12) return txId || "---";
-  return txId.slice(0, 8) + "..." + txId.slice(-4);
-}
-
-interface StatusData {
-  app_id: number;
-  contract_address: string;
-  sponsor: string;
-  team: string;
-  contract_balance_algo: number;
-  total_released_algo: number;
-  milestone_amount_algo: number;
-  milestone_approved: boolean;
-}
-
-interface RawTransaction {
-  type: string;
-  txid: string;
-  timestamp: number;
-  app_args?: string[];
-  payment_amount_algo?: number;
-  inner_txns?: { amount_algo?: number; receiver?: string }[];
-}
+// No raw transactions needed
 
 // Multi-milestone mock data (read-only, matches dashboard)
 type MilestoneStatusType = "PENDING" | "SUBMITTED" | "APPROVED" | "PAID";
@@ -53,12 +19,7 @@ interface MilestoneDisplay {
   status: MilestoneStatusType;
 }
 
-const initialMilestones: MilestoneDisplay[] = [
-  { id: 1, title: "Proposal Approval", amount: 0.50, status: "PENDING" },
-  { id: 2, title: "Development Phase", amount: 0.50, status: "PENDING" },
-  { id: 3, title: "Testing Phase", amount: 0.50, status: "PENDING" },
-  { id: 4, title: "Final Delivery", amount: 0.50, status: "PENDING" },
-];
+
 
 const statusConfig: Record<
   MilestoneStatusType,
@@ -104,52 +65,44 @@ function progressPercent(status: MilestoneStatusType): string {
 }
 
 export default function TransparencyPage() {
-  const [data, setData] = useState<StatusData | null>(null);
-  const [loading, setLoading] = useState(true);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
   // Sync with live mock data
-  const [milestones] = useSharedState<MilestoneDisplay[]>("grantflow_milestones", initialMilestones);
-  const [transactions] = useSharedState<any[]>("grantflow_transactions", [
-    { action: "FUNDING", actionColor: "#FFD600", details: "2.00 ALGO Deposited", date: "2026-03-02 17:45:00 UTC", txId: "V0BAX3...JKXIQ", status: "CONFIRMED", statusColor: "#4ADE80" },
-  ]);
+  const [milestones] = useSharedState<MilestoneDisplay[]>(`grantflow_milestones_app_${selectedProject?.appId || "default"}`, selectedProject ? getInitialMilestones(selectedProject.appId) as any : []);
+  const [transactions] = useSharedState<any[]>(
+    `grantflow_transactions_app_${selectedProject?.appId || "default"}`,
+    selectedProject ? getInitialTransactions(selectedProject.appId) : []
+  );
 
-  useEffect(() => {
-    fetch(`${API_BASE}/status`)
-      .then((r) => r.json())
-      .then((statusRes) => {
-        if (statusRes.success) setData(statusRes.data);
-      })
-      .catch((err) => console.error("API error:", err))
-      .finally(() => setLoading(false));
-  }, []);
+  const fundsReceived = milestones.filter(m => m.status === "PAID").reduce((sum, m) => sum + m.amount, 0);
+  const remainingFunds = milestones.filter(m => m.status !== "PAID").reduce((sum, m) => sum + m.amount, 0);
+  const calculatedTotalGrant = fundsReceived + remainingFunds;
 
-  const summaryData = data
+  const summaryData = selectedProject
     ? [
       {
         key: "TOTAL GRANT VALUE",
-        value: `${(data.total_released_algo + data.contract_balance_algo).toFixed(2)}`,
+        value: `${calculatedTotalGrant.toFixed(2)}`,
         color: "#FFD600",
       },
       {
         key: "FUNDS DISTRIBUTED",
-        value: `${data.total_released_algo.toFixed(2)}`,
+        value: `${fundsReceived.toFixed(2)}`,
         color: "#F5F5F0",
       },
       {
         key: "REMAINING FUNDS",
-        value: `${data.contract_balance_algo.toFixed(2)}`,
+        value: `${remainingFunds.toFixed(2)}`,
         color: "#4ADE80",
       },
     ]
     : [];
 
-  const contractInfo = data
+  const contractInfo = selectedProject
     ? [
-      { key: "CONTRACT ADDRESS", value: shortenAddress(data.contract_address) },
-      { key: "APPLICATION ID", value: `APP-${data.app_id}` },
-      { key: "SPONSOR", value: shortenAddress(data.sponsor) },
-      { key: "TEAM", value: shortenAddress(data.team) },
+      { key: "CONTRACT ADDRESS", value: selectedProject.contract.slice(0, 6) + "..." + selectedProject.contract.slice(-4) },
+      { key: "APPLICATION ID", value: `APP-${selectedProject.appId}` },
+      { key: "TEAM WALLET", value: selectedProject.team.slice(0, 6) + "..." + selectedProject.team.slice(-4) },
     ]
     : [];
 
@@ -192,35 +145,28 @@ export default function TransparencyPage() {
             </span>
           </div>
 
-          {loading ? (
-            <div className="flex items-center justify-center py-12 bg-[#0F0F0F] border border-[#2D2D2D]">
-              <span className="font-ibm-mono text-[11px] text-[#555555] tracking-[1px]">
-                FETCHING ON-CHAIN DATA...
-              </span>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-[2px]">
-              {summaryData.map((item) => (
-                <div
-                  key={item.key}
-                  className="flex flex-col items-center justify-center gap-2 py-8 bg-[#0F0F0F] border border-[#2D2D2D]"
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-[2px]">
+            {summaryData.map((item) => (
+              <div
+                key={item.key}
+                className="flex flex-col items-center justify-center gap-2 py-8 bg-[#0F0F0F] border border-[#2D2D2D]"
+              >
+                <span
+                  className="font-grotesk text-[36px] md:text-[48px] font-bold tracking-[-2px] leading-none"
+                  style={{ color: item.color }}
                 >
-                  <span
-                    className="font-grotesk text-[36px] md:text-[48px] font-bold tracking-[-2px] leading-none"
-                    style={{ color: item.color }}
-                  >
-                    {item.value}
-                  </span>
-                  <span className="font-ibm-mono text-[11px] text-[#888888] tracking-[1px]">
-                    ALGO
-                  </span>
-                  <span className="font-ibm-mono text-[9px] text-[#555555] tracking-[1.5px] mt-1">
-                    {item.key}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
+                  {item.value}
+                </span>
+                <span className="font-ibm-mono text-[11px] text-[#888888] tracking-[1px]">
+                  ALGO
+                </span>
+                <span className="font-ibm-mono text-[9px] text-[#555555] tracking-[1.5px] mt-1">
+                  {item.key}
+                </span>
+              </div>
+            ))}
+          </div>
 
           {/* Multi-Milestone Status (Read-Only) */}
           <div className="flex items-center gap-2 mt-4">
@@ -340,28 +286,21 @@ export default function TransparencyPage() {
                 ON-CHAIN DETAILS
               </span>
             </div>
-            {loading ? (
-              <div className="flex items-center justify-center py-8">
-                <span className="font-ibm-mono text-[11px] text-[#555555] tracking-[1px]">
-                  LOADING...
+            {contractInfo.map((item, i) => (
+              <div
+                key={item.key}
+                className={`flex items-center justify-between px-6 py-4 ${i < contractInfo.length - 1 ? "border-b border-[#1D1D1D]" : ""
+                  }`}
+              >
+                <span className="font-ibm-mono text-[10px] text-[#555555] tracking-[1.5px]">
+                  {item.key}
+                </span>
+                <span className="font-ibm-mono text-[11px] text-[#F5F5F0] tracking-[1px]">
+                  {item.value}
                 </span>
               </div>
-            ) : (
-              contractInfo.map((item, i) => (
-                <div
-                  key={item.key}
-                  className={`flex items-center justify-between px-6 py-4 ${i < contractInfo.length - 1 ? "border-b border-[#1D1D1D]" : ""
-                    }`}
-                >
-                  <span className="font-ibm-mono text-[10px] text-[#555555] tracking-[1.5px]">
-                    {item.key}
-                  </span>
-                  <span className="font-ibm-mono text-[11px] text-[#F5F5F0] tracking-[1px]">
-                    {item.value}
-                  </span>
-                </div>
-              ))
-            )}
+            ))
+            }
           </div>
 
           {/* Transaction Log */}
@@ -389,50 +328,46 @@ export default function TransparencyPage() {
               <span className="font-ibm-mono text-[9px] text-[#555555] tracking-[1.5px] text-right">STATUS</span>
             </div>
 
-            {loading ? (
-              <div className="flex items-center justify-center py-8">
-                <span className="font-ibm-mono text-[11px] text-[#555555] tracking-[1px]">
-                  FETCHING TRANSACTIONS...
-                </span>
-              </div>
-            ) : transactions.length === 0 ? (
+            {transactions.filter(tx => tx.action === "FUNDING" || tx.action === "PAYMENT").length === 0 ? (
               <div className="flex items-center justify-center py-8">
                 <span className="font-ibm-mono text-[11px] text-[#555555] tracking-[1px]">
                   NO TRANSACTIONS FOUND
                 </span>
               </div>
             ) : (
-              transactions.map((tx, i) => (
-                <div
-                  key={i}
-                  className={`flex flex-col md:grid md:grid-cols-5 gap-2 md:gap-4 px-6 py-4 ${i < transactions.length - 1 ? "border-b border-[#1D1D1D]" : ""
-                    }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="w-[6px] h-[6px] shrink-0" style={{ backgroundColor: tx.actionColor }} />
-                    <span className="font-ibm-mono text-[11px] font-bold tracking-[1.5px]" style={{ color: tx.actionColor }}>
-                      {tx.action}
-                    </span>
+              transactions
+                .filter(tx => tx.action === "FUNDING" || tx.action === "PAYMENT")
+                .map((tx, i, arr) => (
+                  <div
+                    key={i}
+                    className={`flex flex-col md:grid md:grid-cols-5 gap-2 md:gap-4 px-6 py-4 ${i < arr.length - 1 ? "border-b border-[#1D1D1D]" : ""
+                      }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="w-[6px] h-[6px] shrink-0" style={{ backgroundColor: tx.actionColor }} />
+                      <span className="font-ibm-mono text-[11px] font-bold tracking-[1.5px]" style={{ color: tx.actionColor }}>
+                        {tx.action}
+                      </span>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="md:hidden font-ibm-mono text-[9px] text-[#555555] tracking-[1px] mr-2">DATE:</span>
+                      <span className="font-ibm-mono text-[10px] text-[#888888] tracking-[0.5px]">{tx.date}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="md:hidden font-ibm-mono text-[9px] text-[#555555] tracking-[1px] mr-2">TX ID:</span>
+                      <span className="font-ibm-mono text-[10px] text-[#888888] tracking-[0.5px]">{tx.txId}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="md:hidden font-ibm-mono text-[9px] text-[#555555] tracking-[1px] mr-2">DETAILS:</span>
+                      <span className="font-ibm-mono text-[10px] text-[#F5F5F0] tracking-[0.5px]">{tx.details}</span>
+                    </div>
+                    <div className="flex items-center md:justify-end">
+                      <span className="font-ibm-mono text-[10px] font-bold tracking-[1.5px]" style={{ color: tx.statusColor }}>
+                        {tx.status}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center">
-                    <span className="md:hidden font-ibm-mono text-[9px] text-[#555555] tracking-[1px] mr-2">DATE:</span>
-                    <span className="font-ibm-mono text-[10px] text-[#888888] tracking-[0.5px]">{tx.date}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <span className="md:hidden font-ibm-mono text-[9px] text-[#555555] tracking-[1px] mr-2">TX ID:</span>
-                    <span className="font-ibm-mono text-[10px] text-[#888888] tracking-[0.5px]">{tx.txId}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <span className="md:hidden font-ibm-mono text-[9px] text-[#555555] tracking-[1px] mr-2">DETAILS:</span>
-                    <span className="font-ibm-mono text-[10px] text-[#F5F5F0] tracking-[0.5px]">{tx.details}</span>
-                  </div>
-                  <div className="flex items-center md:justify-end">
-                    <span className="font-ibm-mono text-[10px] font-bold tracking-[1.5px]" style={{ color: tx.statusColor }}>
-                      {tx.status}
-                    </span>
-                  </div>
-                </div>
-              ))
+                ))
             )}
           </div>
 

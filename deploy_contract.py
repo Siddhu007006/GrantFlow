@@ -4,7 +4,7 @@ from pyteal import *
 import base64
 
 # 🔴 PASTE YOUR 25-WORD MNEMONIC HERE
-creator_mnemonic = "reason tip lady equal impose rocket negative casino burger flock fever together stable spider never trick sudden donate option focus rail jeans nice ability luggage"
+creator_mnemonic = "ride youth ghost nice common little cushion nurse veteran cube jazz purity account cry excuse uphold stick like mind crazy judge corn banner above shock"
 
 private_key = mnemonic.to_private_key(creator_mnemonic)
 sender = account.address_from_private_key(private_key)
@@ -55,10 +55,23 @@ def approval_program():
         Return(Int(1))
     )
 
+    refund_funds = Seq(
+        Assert(Txn.sender() == App.globalGet(sponsor_key)),
+        InnerTxnBuilder.Begin(),
+        InnerTxnBuilder.SetFields({
+            TxnField.type_enum: TxnType.Payment,
+            TxnField.receiver: Txn.sender(),
+            TxnField.amount: Btoi(Txn.application_args[1]),
+        }),
+        InnerTxnBuilder.Submit(),
+        Return(Int(1))
+    )
+
     program = Cond(
         [Txn.application_id() == Int(0), on_create],
         [Txn.application_args[0] == Bytes("approve"), approve_milestone],
-        [Txn.application_args[0] == Bytes("release"), release_funds]
+        [Txn.application_args[0] == Bytes("release"), release_funds],
+        [Txn.application_args[0] == Bytes("refund"), refund_funds]
     )
 
     return program

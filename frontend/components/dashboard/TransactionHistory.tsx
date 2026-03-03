@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useSharedState } from "@/lib/useSharedState";
 
-const API_BASE = "http://localhost:5000/api";
+const API_BASE = "http://127.0.0.1:5000/api";
 
 export interface Transaction {
   action: string;
@@ -15,12 +15,35 @@ export interface Transaction {
   statusColor: string;
 }
 
-const mockTransactions: Transaction[] = [
-  { action: "FUNDING", actionColor: "#FFD600", details: "2.00 ALGO Deposited", date: "2026-03-02 17:45:00 UTC", txId: "V0BAX3...JKXIQ", status: "CONFIRMED", statusColor: "#4ADE80" },
-];
+export const mockTransactionsByApp: Record<number, Transaction[]> = {
+  756430745: [
+    { action: "PAYMENT", actionColor: "#555555", details: "1.00 ALGO Released", date: "2026-03-02 18:20:00 UTC", txId: "TXJDNF...8F9G", status: "CONFIRMED", statusColor: "#4ADE80" },
+    { action: "APPROVAL", actionColor: "#555555", details: "Milestone 2 Approved", date: "2026-03-02 18:15:00 UTC", txId: "AXJDNF...8F9H", status: "CONFIRMED", statusColor: "#4ADE80" },
+    { action: "SUBMISSION", actionColor: "#60A5FA", details: "Proof Submitted for Milestone 2", date: "2026-03-02 18:10:00 UTC", txId: "---", status: "APPROVED", statusColor: "#FFD600" },
+    { action: "PAYMENT", actionColor: "#555555", details: "1.00 ALGO Released", date: "2026-03-02 18:05:00 UTC", txId: "PXJDNF...8F9I", status: "CONFIRMED", statusColor: "#4ADE80" },
+    { action: "APPROVAL", actionColor: "#555555", details: "Milestone 1 Approved", date: "2026-03-02 18:00:00 UTC", txId: "QXJDNF...8F9J", status: "CONFIRMED", statusColor: "#4ADE80" },
+    { action: "SUBMISSION", actionColor: "#60A5FA", details: "Proof Submitted for Milestone 1", date: "2026-03-02 17:55:00 UTC", txId: "---", status: "APPROVED", statusColor: "#FFD600" },
+    { action: "FUNDING", actionColor: "#FFD600", details: "4.00 ALGO Deposited", date: "2026-03-02 17:45:00 UTC", txId: "V0BAX3...JKXIQ", status: "CONFIRMED", statusColor: "#4ADE80" }
+  ],
+  756439065: [
+    { action: "PAYMENT", actionColor: "#555555", details: "0.50 ALGO Released", date: "2026-03-03 10:30:00 UTC", txId: "TXDEFI...9A1B", status: "CONFIRMED", statusColor: "#4ADE80" },
+    { action: "APPROVAL", actionColor: "#555555", details: "Milestone 1 Approved", date: "2026-03-03 10:20:00 UTC", txId: "AXDEFI...9A1C", status: "CONFIRMED", statusColor: "#4ADE80" },
+    { action: "SUBMISSION", actionColor: "#60A5FA", details: "Proof Submitted for Milestone 1", date: "2026-03-03 10:10:00 UTC", txId: "---", status: "APPROVED", statusColor: "#FFD600" },
+    { action: "FUNDING", actionColor: "#FFD600", details: "4.00 ALGO Deposited", date: "2026-03-03 10:00:00 UTC", txId: "FDEFI...92XZ", status: "CONFIRMED", statusColor: "#4ADE80" }
+  ],
+  756442667: [
+    { action: "FUNDING", actionColor: "#FFD600", details: "4.00 ALGO Deposited", date: "2026-03-03 10:00:00 UTC", txId: "JCK4V3...ZZQJG", status: "CONFIRMED", statusColor: "#4ADE80" }
+  ]
+};
 
-export default function TransactionHistory() {
-  const [transactions, setTransactions] = useSharedState<Transaction[]>("grantflow_transactions", mockTransactions);
+export const getInitialTransactions = (appId: number) => mockTransactionsByApp[appId] || [];
+
+interface Props {
+  appId: number;
+}
+
+export default function TransactionHistory({ appId }: Props) {
+  const [transactions, setTransactions] = useSharedState<Transaction[]>(`grantflow_transactions_app_${appId}`, getInitialTransactions(appId));
   const loading = false;
 
   return (

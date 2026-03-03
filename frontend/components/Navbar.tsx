@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useWallet } from "@/components/WalletProvider";
 import Link from "next/link";
 
 const links = [
@@ -18,6 +19,7 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [active, setActive] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
+  const { activeRole, setActiveRole } = useWallet();
 
   /* ── scroll detection ── */
   useEffect(() => {
@@ -89,10 +91,10 @@ export default function Navbar() {
 
         {/* ── Desktop CTA buttons ── */}
         <div className="hidden md:flex items-center gap-3 ml-12">
-          <Link href="/student" className="nav-light-white border border-[#333] hover:bg-[#1A1A1A] hover:border-[#4ADE80] text-[#888] hover:text-[#4ADE80] px-5 py-[10px] rounded-full font-ibm-mono text-[10px] tracking-[1.5px] transition-all duration-300">
+          <Link onClick={() => setActiveRole("student")} href="/student" className="nav-light-white border border-[#333] hover:bg-[#1A1A1A] hover:border-[#4ADE80] text-[#888] hover:text-[#4ADE80] px-5 py-[10px] rounded-full font-ibm-mono text-[10px] tracking-[1.5px] transition-all duration-300">
             STUDENT
           </Link>
-          <Link href="/dashboard" className="nav-light bg-[#111] border border-[#FFD600] text-[#FFD600] hover:bg-[#FFD600] hover:text-[#0A0A0A] px-5 py-[10px] rounded-full font-grotesk font-bold text-[11px] tracking-[1.5px] transition-all duration-300">
+          <Link onClick={() => setActiveRole("sponsor")} href="/dashboard" className="nav-light bg-[#111] border border-[#FFD600] text-[#FFD600] hover:bg-[#FFD600] hover:text-[#0A0A0A] px-5 py-[10px] rounded-full font-grotesk font-bold text-[11px] tracking-[1.5px] transition-all duration-300">
             SPONSOR
           </Link>
         </div>
@@ -139,14 +141,14 @@ export default function Navbar() {
           <div className="flex flex-col gap-3 pt-5 mt-2">
             <Link
               href="/student"
-              onClick={() => setMenuOpen(false)}
+              onClick={() => { setActiveRole("student"); setMenuOpen(false); }}
               className="nav-light-white w-full text-center border border-[#333] hover:bg-[#1A1A1A] hover:border-[#4ADE80] text-[#888] hover:text-[#4ADE80] px-5 py-[12px] rounded-full font-ibm-mono text-[11px] tracking-[1.5px] transition-all duration-300"
             >
               STUDENT PORTAL
             </Link>
             <Link
               href="/dashboard"
-              onClick={() => setMenuOpen(false)}
+              onClick={() => { setActiveRole("sponsor"); setMenuOpen(false); }}
               className="nav-light w-full text-center bg-[#111] border border-[#FFD600] text-[#FFD600] hover:bg-[#FFD600] hover:text-[#0A0A0A] px-5 py-[12px] rounded-full font-grotesk font-bold text-[12px] tracking-[1.5px] transition-all duration-300"
             >
               SPONSOR DASHBOARD

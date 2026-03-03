@@ -6,11 +6,12 @@ import { useWallet } from "@/components/WalletProvider";
 import { SPONSOR_ADDRESS, RECEIVER_ADDRESS, APP_ID, ALGOD_URL } from "@/lib/constants";
 import { useMilestones, type MilestoneStatusType } from "./MilestoneContext";
 import { useSharedState } from "@/lib/useSharedState";
-import { type Transaction } from "./TransactionHistory";
+import { type Transaction, getInitialTransactions } from "./TransactionHistory";
 
 const algodClient = new algosdk.Algodv2("", ALGOD_URL, "");
 
 async function sendAppCall(
+  appId: number,
   action: "approve" | "release",
   senderAddress: string,
   signTxn: (txnGroups: Array<{ txn: algosdk.Transaction }[]>) => Promise<Uint8Array[]>
@@ -18,7 +19,7 @@ async function sendAppCall(
   const suggestedParams = await algodClient.getTransactionParams().do();
   const txn = algosdk.makeApplicationNoOpTxnFromObject({
     sender: senderAddress,
-    appIndex: APP_ID,
+    appIndex: appId,
     appArgs: [new Uint8Array(Buffer.from(action))],
     accounts: action === "release" ? [RECEIVER_ADDRESS] : undefined,
     suggestedParams,
@@ -39,14 +40,18 @@ const statusBadge: Record<MilestoneStatusType, { bg: string; border: string; tex
   PAID: { bg: "bg-[#0A2E1A]", border: "border-[#4ADE80]", text: "text-[#4ADE80]", dot: "bg-[#4ADE80]" },
 };
 
-export default function SponsorActions() {
+interface Props {
+  appId: number;
+}
+
+export default function SponsorActions({ appId }: Props) {
   const [approving, setApproving] = useState(false);
   const [releasing, setReleasing] = useState(false);
   const [lastTx, setLastTx] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { walletAddress, isSponsor, connectWallet, resetConnection, peraWallet } = useWallet();
+  const { walletAddress, isSponsor, connectWallet, resetConnection, peraWallet, activeRole } = useWallet();
   const { milestones, selectedId, selectedMilestone, selectMilestone, approveMilestone, releaseMilestone } = useMilestones();
-  const [transactions, setTransactions] = useSharedState<Transaction[]>("grantflow_transactions", []);
+  const [transactions, setTransactions] = useSharedState<Transaction[]>(`grantflow_transactions_app_${appId}`, getInitialTransactions(appId));
 
   const txPending = approving || releasing;
 
@@ -55,12 +60,14 @@ export default function SponsorActions() {
     selectedMilestone &&
     (selectedMilestone.status === "PENDING" || selectedMilestone.status === "SUBMITTED") &&
     isSponsor &&
+    activeRole === "sponsor" &&
     !txPending;
 
   const canRelease =
     selectedMilestone &&
     selectedMilestone.status === "APPROVED" &&
     isSponsor &&
+    activeRole === "sponsor" &&
     !txPending;
 
   const handleApprove = async () => {
@@ -74,9 +81,10 @@ export default function SponsorActions() {
     setLastTx(null);
     try {
       const txId = await sendAppCall(
+        appId,
         "approve",
         walletAddress,
-        (txnGroups) => peraWallet.signTransaction(txnGroups)
+        (txnGroups: any) => peraWallet.signTransaction(txnGroups)
       );
       setLastTx(txId);
       approveMilestone(selectedMilestone.id);
@@ -112,15 +120,17 @@ export default function SponsorActions() {
       // Always approve on-chain first to ensure the contract flag is set
       console.log("[RELEASE] Sending on-chain approve first...");
       await sendAppCall(
+        appId,
         "approve",
         walletAddress,
-        (txnGroups) => peraWallet.signTransaction(txnGroups)
+        (txnGroups: any) => peraWallet.signTransaction(txnGroups)
       );
       console.log("[RELEASE] On-chain approve confirmed, now releasing...");
       const txId = await sendAppCall(
+        appId,
         "release",
         walletAddress,
-        (txnGroups) => peraWallet.signTransaction(txnGroups)
+        (txnGroups: any) => peraWallet.signTransaction(txnGroups)
       );
       setLastTx(txId);
       releaseMilestone(selectedMilestone.id);
@@ -172,7 +182,7 @@ export default function SponsorActions() {
       approveLabel = approving ? "APPROVING..." : "APPROVE MILESTONE";
       releaseLabel = releasing ? "RELEASING..." : "RELEASE FUNDS";
     }
-  } else if (walletAddress && !isSponsor) {
+  } else if (walletAddress && (!isSponsor || activeRole === "student")) {
     approveLabel = "SPONSOR ONLY";
     releaseLabel = "SPONSOR ONLY";
   }

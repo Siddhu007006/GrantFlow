@@ -1,48 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSharedState } from "@/lib/useSharedState";
+import { useWallet } from "@/components/WalletProvider";
 
-export interface Project {
-    id: string;
-    title: string;
-    team: string;
-    totalFunds: number;
-    releasedFunds: number;
-    status: "ACTIVE" | "IN PROGRESS" | "COMPLETED" | "PENDING";
-    contract: string;
-    lastUpdated: string;
-}
-
-const statusStyle: Record<string, { bg: string; border: string; text: string; dot: string }> = {
-    ACTIVE: { bg: "bg-[#0A2E1A]", border: "border-[#4ADE80]", text: "text-[#4ADE80]", dot: "bg-[#4ADE80]" },
-    "IN PROGRESS": { bg: "bg-[#332800]", border: "border-[#FFD600]", text: "text-[#FFD600]", dot: "bg-[#FFD600]" },
-    COMPLETED: { bg: "bg-[#1A1A2E]", border: "border-[#60A5FA]", text: "text-[#60A5FA]", dot: "bg-[#60A5FA]" },
-    PENDING: { bg: "bg-[#1A1A1A]", border: "border-[#555555]", text: "text-[#555555]", dot: "bg-[#555555]" },
-};
-
-const initialProjects: Project[] = [
-    {
-        id: "proj_001",
-        title: "Blockchain Education Fund",
-        team: "OHQISH2P67CG7KVQA7T22ICMRN245VE4M4KGO7G43R4QBUATJN36NMFDRM",
-        totalFunds: 2.00,
-        releasedFunds: 0.00,
-        status: "ACTIVE",
-        contract: "5UJS5WR6TK7YRBCHEGO3RW2YGL5NIHEUVIQ3C67L2RGONRC5G",
-        lastUpdated: "2026-03-02 17:45:00 UTC",
-    },
-    {
-        id: "proj_002",
-        title: "DeFi Protocol Audit",
-        team: "QR7TL3FJN8DKWPX5VA2YMCG6EHBI9SU0O4Z1NMXFK7PL",
-        totalFunds: 15.00,
-        releasedFunds: 15.00,
-        status: "COMPLETED",
-        contract: "MN8P2QR4TK7YBCHF6O3EW2XDLS5JIHEUVAQ9C1GL7RONC",
-        lastUpdated: "2026-02-28 09:15:00 UTC",
-    },
-];
+import { type Project, initialProjects, statusStyle } from "@/lib/projectsStore";
 
 function shortenAddr(addr: string) {
     if (!addr || addr.length < 10) return addr || "---";
@@ -65,8 +27,9 @@ interface Props {
 
 export default function ProjectsOverview({ onSelectProject }: Props) {
     const [projects, setProjects] = useSharedState<Project[]>("grantflow_projects", initialProjects);
-    const [milestones] = useSharedState<any[]>("grantflow_milestones", []);
-    const proj1Paid = milestones.filter(m => m.status === "PAID").reduce((sum: number, m: any) => sum + m.amount, 0);
+    const { activeRole } = useWallet();
+
+
 
     const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -123,73 +86,9 @@ export default function ProjectsOverview({ onSelectProject }: Props) {
 
             {/* Project Cards Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {projects.map((p) => {
-                    const st = statusStyle[p.status] || statusStyle.PENDING;
-                    // Link proj_001 to live milestones mock data from other tabs
-                    const actualReleased = p.id === "proj_001" ? proj1Paid : p.releasedFunds;
-                    const progress = p.totalFunds > 0 ? (actualReleased / p.totalFunds) * 100 : 0;
-
-                    return (
-                        <button
-                            key={p.id}
-                            onClick={() => onSelectProject(p)}
-                            className="flex flex-col bg-[#0F0F0F] border border-[#2D2D2D] hover:border-[#FFD600] transition-colors cursor-pointer text-left group"
-                        >
-                            {/* Card Header */}
-                            <div className="flex items-center justify-between px-5 py-4 border-b border-[#2D2D2D]">
-                                <span className="font-grotesk text-[14px] font-bold text-[#F5F5F0] tracking-[-0.3px] group-hover:text-[#FFD600] transition-colors">
-                                    {p.title}
-                                </span>
-                                <div className={`flex items-center gap-1.5 h-[20px] px-2 ${st.bg} border ${st.border}`}>
-                                    <span className={`w-[4px] h-[4px] rounded-full ${st.dot}`} />
-                                    <span className={`font-ibm-mono text-[7px] font-bold tracking-[1.5px] ${st.text}`}>
-                                        {p.status}
-                                    </span>
-                                </div>
-                            </div>
-
-                            {/* Card Body */}
-                            <div className="flex flex-col gap-3 px-5 py-4">
-                                {/* Fund bar */}
-                                <div className="flex flex-col gap-1.5">
-                                    <div className="flex items-center justify-between">
-                                        <span className="font-ibm-mono text-[9px] text-[#555555] tracking-[1.5px]">FUNDS</span>
-                                        <span className="font-ibm-mono text-[10px] text-[#F5F5F0] tracking-[0.5px]">
-                                            {actualReleased.toFixed(2)} / {p.totalFunds.toFixed(2)} ALGO
-                                        </span>
-                                    </div>
-                                    <div className="w-full h-[3px] bg-[#1D1D1D]">
-                                        <div
-                                            className="h-full bg-[#4ADE80] transition-all duration-500"
-                                            style={{ width: `${progress}%` }}
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Details */}
-                                <div className="flex items-center justify-between">
-                                    <span className="font-ibm-mono text-[9px] text-[#555555] tracking-[1px]">TEAM</span>
-                                    <span className="font-ibm-mono text-[10px] text-[#888888] tracking-[0.5px]">{shortenAddr(p.team)}</span>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <span className="font-ibm-mono text-[9px] text-[#555555] tracking-[1px]">CONTRACT</span>
-                                    <span className="font-ibm-mono text-[10px] text-[#888888] tracking-[0.5px]">{shortenAddr(p.contract)}</span>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <span className="font-ibm-mono text-[9px] text-[#555555] tracking-[1px]">UPDATED</span>
-                                    <span className="font-ibm-mono text-[10px] text-[#888888] tracking-[0.5px]">{p.lastUpdated}</span>
-                                </div>
-                            </div>
-
-                            {/* Card Footer */}
-                            <div className="flex items-center justify-center px-5 py-3 border-t border-[#2D2D2D] bg-[#111111] group-hover:bg-[#1A1A0A] transition-colors">
-                                <span className="font-ibm-mono text-[9px] font-bold text-[#FFD600] tracking-[2px] group-hover:tracking-[3px] transition-all">
-                                    OPEN PROJECT →
-                                </span>
-                            </div>
-                        </button>
-                    );
-                })}
+                {projects.map((p) => (
+                    <ProjectCard key={p.id} p={p} onSelectProject={onSelectProject} />
+                ))}
             </div>
 
             {/* Create Project Modal */}
@@ -227,6 +126,7 @@ export default function ProjectsOverview({ onSelectProject }: Props) {
                                     releasedFunds: 0,
                                     status: "PENDING",
                                     contract: genMockAddress("APP"),
+                                    appId: Math.floor(Math.random() * 1000000000), // generate a random app ID for UI mocks
                                     lastUpdated: new Date().toISOString().replace('T', ' ').slice(0, 19) + " UTC"
                                 };
 
@@ -319,5 +219,77 @@ export default function ProjectsOverview({ onSelectProject }: Props) {
                 </div>
             )}
         </div>
+    );
+}
+
+function ProjectCard({ p, onSelectProject }: { p: Project, onSelectProject: (p: Project) => void }) {
+    const [milestones] = useSharedState<any[]>(`grantflow_milestones_app_${p.appId}`, []);
+
+    // Calculate actual released dynamically based on shared state
+    const actualReleased = milestones.length > 0
+        ? milestones.filter(m => m.status === "PAID").reduce((sum: number, m: any) => sum + m.amount, 0)
+        : p.releasedFunds; // fallback to API value if no local state
+
+    const progress = p.totalFunds > 0 ? (actualReleased / p.totalFunds) * 100 : 0;
+    const st = statusStyle[p.status] || statusStyle.PENDING;
+
+    return (
+        <button
+            onClick={() => onSelectProject(p)}
+            className="flex flex-col bg-[#0F0F0F] border border-[#2D2D2D] hover:border-[#FFD600] transition-colors cursor-pointer text-left group"
+        >
+            {/* Card Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-[#2D2D2D]">
+                <span className="font-grotesk text-[14px] font-bold text-[#F5F5F0] tracking-[-0.3px] group-hover:text-[#FFD600] transition-colors">
+                    {p.title}
+                </span>
+                <div className={`flex items-center gap-1.5 h-[20px] px-2 ${st.bg} border ${st.border}`}>
+                    <span className={`w-[4px] h-[4px] rounded-full ${st.dot}`} />
+                    <span className={`font-ibm-mono text-[7px] font-bold tracking-[1.5px] ${st.text}`}>
+                        {p.status}
+                    </span>
+                </div>
+            </div>
+
+            {/* Card Body */}
+            <div className="flex flex-col gap-3 px-5 py-4">
+                {/* Fund bar */}
+                <div className="flex flex-col gap-1.5">
+                    <div className="flex items-center justify-between">
+                        <span className="font-ibm-mono text-[9px] text-[#555555] tracking-[1.5px]">FUNDS</span>
+                        <span className="font-ibm-mono text-[10px] text-[#F5F5F0] tracking-[0.5px]">
+                            {actualReleased.toFixed(2)} / {p.totalFunds.toFixed(2)} ALGO
+                        </span>
+                    </div>
+                    <div className="w-full h-[3px] bg-[#1D1D1D]">
+                        <div
+                            className="h-full bg-[#4ADE80] transition-all duration-500"
+                            style={{ width: `${progress}%` }}
+                        />
+                    </div>
+                </div>
+
+                {/* Details */}
+                <div className="flex items-center justify-between">
+                    <span className="font-ibm-mono text-[9px] text-[#555555] tracking-[1px]">TEAM</span>
+                    <span className="font-ibm-mono text-[10px] text-[#888888] tracking-[0.5px]">{shortenAddr(p.team)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                    <span className="font-ibm-mono text-[9px] text-[#555555] tracking-[1px]">CONTRACT</span>
+                    <span className="font-ibm-mono text-[10px] text-[#888888] tracking-[0.5px]">{shortenAddr(p.contract)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                    <span className="font-ibm-mono text-[9px] text-[#555555] tracking-[1px]">UPDATED</span>
+                    <span className="font-ibm-mono text-[10px] text-[#888888] tracking-[0.5px]">{p.lastUpdated}</span>
+                </div>
+            </div>
+
+            {/* Card Footer */}
+            <div className="flex items-center justify-center px-5 py-3 border-t border-[#2D2D2D] bg-[#111111] group-hover:bg-[#1A1A0A] transition-colors">
+                <span className="font-ibm-mono text-[9px] font-bold text-[#FFD600] tracking-[2px] group-hover:tracking-[3px] transition-all">
+                    OPEN PROJECT →
+                </span>
+            </div>
+        </button>
     );
 }

@@ -22,7 +22,7 @@ export default function DashboardClient() {
                 <ProjectsOverview onSelectProject={setSelectedProject} />
             ) : (
                 /* ── PROJECT DETAIL (existing dashboard) ── */
-                <MilestoneProvider>
+                <MilestoneProvider appId={selectedProject.appId}>
                     <div className="flex flex-col gap-6 px-6 md:px-[48px] py-8 md:py-12 max-w-[1400px] mx-auto w-full">
                         {/* Back Button */}
                         <button
@@ -57,7 +57,7 @@ export default function DashboardClient() {
 
                         {/* Top grid: Contract Overview + Milestones */}
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-[2px]">
-                            <ContractOverview />
+                            <ContractOverview appId={selectedProject.appId} />
                             <MilestoneStatus />
                         </div>
 
@@ -71,7 +71,7 @@ export default function DashboardClient() {
 
                         {/* Actions grid: Sponsor + Team */}
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-[2px]">
-                            <SponsorActions />
+                            <SponsorActions appId={selectedProject.appId} />
                             <TeamPayment />
                         </div>
 
@@ -84,7 +84,7 @@ export default function DashboardClient() {
                         </div>
 
                         {/* Transaction History */}
-                        <TransactionHistory />
+                        <TransactionHistory appId={selectedProject.appId} />
 
                         {/* Footer bar */}
                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between py-6 border-t border-[#1D1D1D] gap-3">
